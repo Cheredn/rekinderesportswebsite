@@ -1,0 +1,4 @@
+flask
+flask-cors
+flask-limiter
+aiogram==2.23.1

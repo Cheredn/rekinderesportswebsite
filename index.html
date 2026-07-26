@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekinder eSports | Official Site</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <canvas id="bgCanvas"></canvas>
+
+    <header>
+        <nav class="container">
+            <div class="logo-area">
+                <img src="logo.png" alt="REES" class="header-logo">
+                <div class="logo-text">REKINDER <span>eSports</span></div>
+            </div>
+            
+            <div class="menu-toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="#home">Главная</a></li>
+                <li><a href="#staff">Руководство</a></li>
+                <li><a href="#roster">Состав</a></li>
+                <li><a href="#matches">Матчи</a></li>
+                <li><a href="https://t.me/rekinder_manager" target="_blank" class="btn-join">Связаться</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="home" class="hero">
+        <div class="hero-content reveal">
+            <h4 class="subtitle">Professional CS2 Team</h4>
+            <h1 class="title">REKINDER <span class="highlight">RISE</span></h1>
+            <p>Преодолевая границы, создаем новую эру в киберспорте. Дисциплина. Страсть. Победа.</p>
+            <div class="hero-btns">
+                <a href="#roster" class="btn-primary">Узнать состав</a>
+                <a href="#matches" class="btn-secondary">Последние игры</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="staff" class="container">
+        <h2 class="section-title reveal">Management</h2>
+        <div class="staff-grid">
+            <div class="player-card staff-card reveal">
+                <div class="player-img"><img src="v1moree.png"></div>
+                <div class="player-info"><div class="staff-tag">FOUNDER / CEO</div><h3>V1MOREE</h3></div>
+            </div>
+            <div class="player-card staff-card reveal">
+                <div class="player-img"><img src="r3v0lt.png"></div>
+                <div class="player-info"><div class="staff-tag">CO-FOUNDER / COO</div><h3>R3V0LT</h3></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="roster" class="roster-section container">
+        <h2 class="section-title reveal"><span>Наш</span> Состав</h2>
+        <div class="roster-grid">
+            <div class="player-card reveal"><div class="player-img"><img src="sal1ch.png"></div><div class="player-info"><h3>SAL1CH</h3><p>OpenFragger</p></div></div>
+            <div class="player-card reveal"><div class="player-img"><img src="awesome.png"></div><div class="player-info"><h3>AWESOME</h3><p>Sniper</p></div></div>
+            <div class="player-card reveal"><div class="player-img"><img src="shnyroq.png"></div><div class="player-info"><div class="player-tag">CAPTAIN</div><h3>ShnyroQ</h3><p>IGL</p></div></div>
+            <div class="player-card reveal"><div class="player-img"><img src="takuya.png"></div><div class="player-info"><h3>TAKUYA</h3><p>Lurker</p></div></div>
+            <div class="player-card reveal"><div class="player-img"><img src="mott1vv.png"></div><div class="player-info"><h3>MOTT1VV</h3><p>Support</p></div></div>
+        </div>
+        <h3 class="sub-title reveal">Запасные</h3>
+        <div class="sub-roster-grid">
+            <div class="player-card sub-card reveal"><div class="player-img"><img src="st0rmie.png"></div><div class="player-info"><h3>ST0RMIE</h3><p>Rifler</p></div></div>
+        </div>
+    </section>
+
+    <section id="matches" class="matches-section container">
+        <h2 class="section-title reveal"><span>Последние</span> Результаты</h2>
+        <div id="matches-loader"></div>
+    </section>
+
+    <footer>
+        <div class="container footer-content">
+            <p>&copy; 2026 Rekinder eSports. Все права защищены.</p>
+            <div class="socials">
+                <a href="https://t.me/RekindereSports" target="_blank"><i class="fab fa-telegram"></i></a>
+                <a href="#" target="_blank"><i class="fab fa-twitch"></i></a>
+                <a href="https://www.tiktok.com/@rekinderesports?_r=1&_t=ZS-98IDTRz7FzR" target="_blank"><i class="fab fa-tiktok"></i></a>
+            </div>
+        </div>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>

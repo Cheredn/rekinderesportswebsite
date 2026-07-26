@@ -3,7 +3,7 @@ import threading
 import os
 import logging
 import asyncio
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory, send_file, make_response
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -16,11 +16,12 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 API_TOKEN = '8818093384:AAF8FHurnJxHFmuMKO2zPyIxr127A8vKDag'
 ALLOWED_IDS = [1014379451, 8868074209]
 
-# Указываем Flask, что текущая папка содержит сайт
-app = Flask(__name__, static_folder='.', template_folder='.')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Настраиваем Flask так, чтобы он автоматически искал статику в корне
+app = Flask(__name__, static_folder=BASE_DIR, static_url_path='')
 CORS(app)
 
-# АНТИ-ДДОС (Лимит запросов к API)
 limiter = Limiter(
     get_remote_address,
     app=app,
@@ -30,13 +31,15 @@ limiter = Limiter(
 
 logging.basicConfig(level=logging.INFO)
 
-if not os.path.exists('opponents'):
-    os.makedirs('opponents')
+OPPONENTS_DIR = os.path.join(BASE_DIR, 'opponents')
+if not os.path.exists(OPPONENTS_DIR):
+    os.makedirs(OPPONENTS_DIR)
 
 # --- БАЗА ДАННЫХ ---
 def init_db():
     try:
-        conn = sqlite3.connect('matches.db')
+        db_path = os.path.join(BASE_DIR, 'matches.db')
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS matches 
                           (id INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -52,7 +55,8 @@ def init_db():
 
 def get_matches():
     try:
-        conn = sqlite3.connect('matches.db')
+        db_path = os.path.join(BASE_DIR, 'matches.db')
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("SELECT opponent, score, status, opp_logo FROM matches ORDER BY id DESC LIMIT 5")
         rows = cursor.fetchall()
@@ -66,30 +70,40 @@ def get_matches():
 @app.route('/')
 @app.route('/main')
 def index():
-    return send_from_directory('.', 'index.html')
+    return send_file(os.path.join(BASE_DIR, 'index.html'))
+
+# Принудительная раздача CSS с правильным типом контента
+@app.route('/style.css')
+def serve_css():
+    response = make_response(send_file(os.path.join(BASE_DIR, 'style.css')))
+    response.headers['Content-Type'] = 'text/css'
+    return response
+
+# Принудительная раздача JS
+@app.route('/script.js')
+def serve_js():
+    response = make_response(send_file(os.path.join(BASE_DIR, 'script.js')))
+    response.headers['Content-Type'] = 'application/javascript'
+    return response
 
 @app.route('/api/matches', methods=['GET'])
-@limiter.limit("20 per minute")
+@limiter.limit("50 per minute")
 def api_get_matches():
     data = get_matches()
     return jsonify(data if data is not None else [])
 
 @app.route('/opponents/<path:filename>')
 def serve_opp_logos(filename):
-    return send_from_directory('opponents', filename)
+    return send_from_directory(OPPONENTS_DIR, filename)
 
+# Раздача остальных файлов (логотипы, фото)
 @app.route('/<path:path>')
-def send_static(path):
-    return send_from_directory('.', path)
+def send_static_files(path):
+    return send_from_directory(BASE_DIR, path)
 
 # --- ТЕЛЕГРАМ БОТ ---
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
-
-async def notify_admins(text):
-    for admin_id in ALLOWED_IDS:
-        try: await bot.send_message(admin_id, text)
-        except: pass
 
 class MatchState(StatesGroup):
     waiting_for_text = State()
@@ -103,20 +117,20 @@ async def denied(m: types.Message):
 async def cmd_start(m: types.Message):
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     kb.add("➕ Добавить игру", "🗑️ Очистить историю", "🩺 Статус")
-    await m.answer(f"Rekinder eSports Admin Panel.\nID: {m.from_user.id}", reply_markup=kb)
+    await m.answer("Rekinder eSports Admin Panel ready.", reply_markup=kb)
 
 @dp.message_handler(lambda m: m.text == "➕ Добавить игру")
 async def add_start(m: types.Message):
-    await m.answer("Шаг 1: Соперник | Счет | WIN или LOSS")
+    await m.answer("Отправь: Соперник | Счет | WIN или LOSS")
     await MatchState.waiting_for_text.set()
 
 @dp.message_handler(state=MatchState.waiting_for_text)
 async def process_t(m: types.Message, state: FSMContext):
     if '|' not in m.text:
-        await m.answer("❌ Формат! Пример: NAVI | 13:5 | WIN")
+        await m.answer("❌ Ошибка! Используй |")
         return
     await state.update_data(text=m.text)
-    await m.answer("Шаг 2: Отправь ЛОГО (картинкой)")
+    await m.answer("Теперь отправь ЛОГО (картинкой)")
     await MatchState.waiting_for_photo.set()
 
 @dp.message_handler(content_types=['photo'], state=MatchState.waiting_for_photo)
@@ -125,9 +139,13 @@ async def process_p(m: types.Message, state: FSMContext):
         data = await state.get_data()
         parts = data['text'].split('|')
         opp, score, stat = parts[0].strip(), parts[1].strip(), parts[2].strip().upper()
+        
         photo_name = f"logo_{opp.replace(' ', '_')}.png"
-        await m.photo[-1].download(destination_file=os.path.join('opponents', photo_name))
-        conn = sqlite3.connect('matches.db')
+        photo_path = os.path.join(OPPONENTS_DIR, photo_name)
+        await m.photo[-1].download(destination_file=photo_path)
+        
+        db_path = os.path.join(BASE_DIR, 'matches.db')
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("INSERT INTO matches (opponent, score, status, opp_logo) VALUES (?, ?, ?, ?)", (opp, score, stat, photo_name))
         cursor.execute("DELETE FROM matches WHERE id NOT IN (SELECT id FROM matches ORDER BY id DESC LIMIT 5)")
@@ -139,7 +157,8 @@ async def process_p(m: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda m: m.text == "🗑️ Очистить историю")
 async def clr(m: types.Message):
-    conn = sqlite3.connect('matches.db'); cursor = conn.cursor()
+    db_path = os.path.join(BASE_DIR, 'matches.db')
+    conn = sqlite3.connect(db_path); cursor = conn.cursor()
     cursor.execute("DELETE FROM matches"); conn.commit(); conn.close()
     await m.answer("🗑️ История очищена.")
 
@@ -149,7 +168,6 @@ async def sts(m: types.Message):
     await m.answer(f"Сервер: 🟢\nБаза: {len(matches) if matches else 0}")
 
 def run_flask():
-    # Render сам подставит порт в переменную окружения PORT
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
 

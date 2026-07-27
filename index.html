@@ -1,44 +1,63 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    <!-- ==========================================
+        БАЗОВЫЕ НАСТРОЙКИ
+    =========================================== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     
-    <!-- SEO Оптимизация для поиска (Google, Yandex) -->
-    <title>Rekinder eSports | Official Site</title>
-    <meta name="description" content="Официальный сайт киберспортивной организации Rekinder eSports. Состав команды по CS2, результаты последних матчей и руководство.">
-    <meta name="keywords" content="Rekinder eSports, REES, CS2 команда, киберспорт, ShnyroQ, состав CS2, v1moree, r3v0lt, киберспортивная команда">
-    <meta name="robots" content="index, follow">
-    
-    <!-- Иконка во вкладке браузера -->
+    <!-- ТИТУЛ (Отображается во вкладке и в поиске) -->
+    <title>Rekinder eSports | Рекиндер — Официальный сайт команды CS2 (REES)</title>
+
+    <!-- ИКОНКА САЙТА (Аватарка в поиске) -->
     <link rel="icon" type="image/png" href="logo.png">
-    
-    <!-- Социальные превью (Open Graph) -->
-    <meta property="og:title" content="Rekinder eSports | Official Site">
+    <link rel="apple-touch-icon" href="logo.png">
+
+    <!-- ==========================================
+        SEO И ПОИСКОВАЯ ОПТИМИЗАЦИЯ
+    =========================================== -->
+    <meta name="description" content="Rekinder eSports (Рекиндер) — профессиональная киберспортивная команда по CS2. Состав, результаты матчей, руководство. Стань частью REES!">
+    <meta name="keywords" content="Rekinder, Rekinder eSports, REES, Рекиндер, рекаиндр, еспортс, Рикиндер, РЕЕС, киберспорт, команда кс2, cs2 team, профессиональный состав кс2, Rekinder roster, ShnyroQ, ShnyroQ cs2, v1moree, v1moree rekinder, r3v0lt, r3v0lt rekinder, SAL1CH, SAL1CH cs2, AWESOME sniper, AWESOME cs2, TAKUYA lurker, TAKUYA cs2, MOTT1VV support, MOTT1VV cs2, st0rmie, st0rmie cs2, результаты матчей кс2, CS2 CIS, CS2 news, киберспортивные новости, rekinder_manager">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Rekinder eSports">
+
+    <!-- Social Media (Превью для Telegram, Discord, VK) -->
+    <meta property="og:title" content="Rekinder eSports | Рекиндер — Официальный сайт">
     <meta property="og:description" content="Преодолевая границы, создаем новую эру в киберспорте. Дисциплина. Страсть. Победа.">
     <meta property="og:image" content="logo.png">
     <meta property="og:url" content="https://rekinderesports.com">
     <meta property="og:type" content="website">
 
-    <!-- Стили и Шрифты -->
+    <!-- ==========================================
+        ШРИФТЫ И СТИЛИ
+    =========================================== -->
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
-    <!-- Анимированный фон (Plexus) -->
+    <!-- СКРЫТЫЙ SEO ТЕКСТ ДЛЯ РОБОТОВ GOOGLE/YANDEX -->
+    <div style="display:none; visibility:hidden; height:0; width:0; overflow:hidden;">
+        <h1>Рекиндер еспортс (Rekinder eSports)</h1>
+        <h2>Киберспортивный клуб Counter-Strike 2</h2>
+        <p>Добро пожаловать на официальный портал команды Rekinder. Здесь представлен актуальный ростер: ShnyroQ, SAL1CH, AWESOME, TAKUYA, MOTT1VV и запасной st0rmie. Руководство: CEO v1moree и COO r3v0lt. Мы профессионально выступаем в дисциплине CS2.</p>
+    </div>
+
+    <!-- ФОНОВАЯ АНИМАЦИЯ ЧАСТИЦ -->
     <canvas id="bgCanvas"></canvas>
 
-    <!-- Шапка сайта -->
+    <!-- ШАПКА (НАВИГАЦИЯ) -->
     <header>
         <nav class="container">
             <div class="logo-area">
-                <img src="logo.png" alt="Rekinder eSports Logo" class="header-logo">
+                <img src="logo.png" alt="Rekinder Logo" class="header-logo">
                 <div class="logo-text">REKINDER <span>eSports</span></div>
             </div>
             
-            <!-- Бургер-меню для мобилок -->
+            <!-- Кнопка мобильного меню -->
             <div class="menu-toggle" id="mobile-menu">
                 <span class="bar"></span>
                 <span class="bar"></span>
@@ -55,131 +74,124 @@
         </nav>
     </header>
 
-    <!-- Главный экран (Hero) -->
-    <section id="home" class="hero">
-        <div class="hero-content reveal">
-            <h4 class="subtitle">Professional CS2 Team</h4>
-            <h1 class="title">REKINDER <span class="highlight">RISE</span></h1>
-            <p>Преодолевая границы, создаем новую эру в киберспорте. Дисциплина. Страсть. Победа.</p>
-            <div class="hero-btns">
-                <a href="#roster" class="btn-primary">Узнать состав</a>
-                <a href="#matches" class="btn-secondary">Последние игры</a>
+    <main>
+        <!-- ГЛАВНЫЙ ЭКРАН (HERO) -->
+        <section id="home" class="hero">
+            <div class="hero-content reveal">
+                <h4 class="subtitle">Professional CS2 Team</h4>
+                <h1 class="title">REKINDER <span class="highlight">RISE</span></h1>
+                <p>Преодолевая границы, создаем новую эру в киберспорте. Дисциплина. Страсть. Победа.</p>
+                <div class="hero-btns">
+                    <a href="#roster" class="btn-primary">Узнать состав</a>
+                    <a href="#matches" class="btn-secondary">Последние игры</a>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Секция Руководства (Management) -->
-    <section id="staff" class="container">
-        <h2 class="section-title reveal">Management</h2>
-        <div class="staff-grid">
-            <!-- CEO -->
-            <div class="player-card staff-card reveal">
-                <div class="player-img">
-                    <img src="v1moree.png" alt="V1MOREE CEO">
+        <!-- СЕКЦИЯ РУКОВОДСТВА (STAFF) -->
+        <section id="staff" class="container">
+            <h2 class="section-title reveal">Management</h2>
+            <div class="staff-grid">
+                <!-- CEO -->
+                <div class="player-card staff-card reveal">
+                    <div class="player-img"><img src="v1moree.png" alt="V1MOREE CEO"></div>
+                    <div class="player-info">
+                        <div class="staff-tag">FOUNDER / CEO</div>
+                        <h3>V1MOREE</h3>
+                    </div>
                 </div>
-                <div class="player-info">
-                    <div class="staff-tag">FOUNDER / CEO</div>
-                    <h3>V1MOREE</h3>
-                </div>
-            </div>
-            <!-- COO -->
-            <div class="player-card staff-card reveal">
-                <div class="player-img">
-                    <img src="r3v0lt.png" alt="R3V0LT COO">
-                </div>
-                <div class="player-info">
-                    <div class="staff-tag">CO-FOUNDER / COO</div>
-                    <h3>R3V0LT</h3>
+                <!-- COO -->
+                <div class="player-card staff-card reveal">
+                    <div class="player-img"><img src="r3v0lt.png" alt="R3V0LT COO"></div>
+                    <div class="player-info">
+                        <div class="staff-tag">CO-FOUNDER / COO</div>
+                        <h3>R3V0LT</h3>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Секция Состава (Roster) -->
-    <section id="roster" class="roster-section container">
-        <h2 class="section-title reveal"><span>Наш</span> Состав</h2>
-        
-        <div class="roster-grid">
-            <!-- Игрок 1 -->
-            <div class="player-card reveal">
-                <div class="player-img"><img src="sal1ch.png" alt="SAL1CH"></div>
-                <div class="player-info">
-                    <h3>SAL1CH</h3>
-                    <p>OpenFragger</p>
+        <!-- СЕКЦИЯ ОСНОВНОГО СОСТАВА -->
+        <section id="roster" class="roster-section container">
+            <h2 class="section-title reveal"><span>Наш</span> Состав</h2>
+            
+            <div class="roster-grid">
+                <!-- Игрок 1 -->
+                <div class="player-card reveal">
+                    <div class="player-img"><img src="sal1ch.png" alt="SAL1CH Player"></div>
+                    <div class="player-info">
+                        <h3>SAL1CH</h3>
+                        <p>OpenFragger</p>
+                    </div>
+                </div>
+                <!-- Игрок 2 -->
+                <div class="player-card reveal">
+                    <div class="player-img"><img src="awesome.png" alt="AWESOME Sniper"></div>
+                    <div class="player-info">
+                        <h3>AWESOME</h3>
+                        <p>Sniper</p>
+                    </div>
+                </div>
+                <!-- КАПИТАН -->
+                <div class="player-card reveal">
+                    <div class="player-img"><img src="shnyroq.png" alt="ShnyroQ Captain"></div>
+                    <div class="player-info">
+                        <div class="player-tag">CAPTAIN</div>
+                        <h3>ShnyroQ</h3>
+                        <p>In-Game Leader</p>
+                    </div>
+                </div>
+                <!-- Игрок 4 -->
+                <div class="player-card reveal">
+                    <div class="player-img"><img src="takuya.png" alt="TAKUYA Lurker"></div>
+                    <div class="player-info">
+                        <h3>TAKUYA</h3>
+                        <p>Lurker</p>
+                    </div>
+                </div>
+                <!-- Игрок 5 -->
+                <div class="player-card reveal">
+                    <div class="player-img"><img src="mott1vv.png" alt="MOTT1VV Support"></div>
+                    <div class="player-info">
+                        <h3>MOTT1VV</h3>
+                        <p>Support</p>
+                    </div>
                 </div>
             </div>
-            <!-- Игрок 2 -->
-            <div class="player-card reveal">
-                <div class="player-img"><img src="awesome.png" alt="AWESOME"></div>
-                <div class="player-info">
-                    <h3>AWESOME</h3>
-                    <p>Sniper</p>
-                </div>
-            </div>
-            <!-- Игрок 3 - Капитан (ShnyroQ) -->
-            <div class="player-card reveal">
-                <div class="player-img"><img src="shnyroq.png" alt="ShnyroQ"></div>
-                <div class="player-info">
-                    <div class="player-tag">CAPTAIN</div>
-                    <h3>ShnyroQ</h3>
-                    <p>In-Game Leader</p>
-                </div>
-            </div>
-            <!-- Игрок 4 -->
-            <div class="player-card reveal">
-                <div class="player-img"><img src="takuya.png" alt="TAKUYA"></div>
-                <div class="player-info">
-                    <h3>TAKUYA</h3>
-                    <p>Lurker</p>
-                </div>
-            </div>
-            <!-- Игрок 5 -->
-            <div class="player-card reveal">
-                <div class="player-img"><img src="mott1vv.png" alt="MOTT1VV"></div>
-                <div class="player-info">
-                    <h3>MOTT1VV</h3>
-                    <p>Support</p>
-                </div>
-            </div>
-        </div>
 
-        <!-- Запасной состав -->
-        <h3 class="sub-title reveal">Запасные</h3>
-        <div class="sub-roster-grid">
-            <div class="player-card sub-card reveal">
-                <div class="player-img">
-                    <img src="st0rmie.png" alt="ST0RMIE">
-                </div>
-                <div class="player-info">
-                    <h3>ST0RMIE</h3>
-                    <p>Rifler</p>
+            <!-- ЗАПАСНЫЕ -->
+            <h3 class="sub-title reveal">Запасные</h3>
+            <div class="sub-roster-grid">
+                <div class="player-card sub-card reveal">
+                    <div class="player-img"><img src="st0rmie.png" alt="ST0RMIE Rifler"></div>
+                    <div class="player-info">
+                        <h3>ST0RMIE</h3>
+                        <p>Rifler</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Секция Результатов (Матчи из БД) -->
-    <section id="matches" class="matches-section container">
-        <h2 class="section-title reveal"><span>Последние</span> Результаты</h2>
-        <div id="matches-loader">
-            <!-- Сюда JavaScript подгружает матчи -->
-        </div>
-    </section>
+        <!-- СЕКЦИЯ РЕЗУЛЬТАТОВ -->
+        <section id="matches" class="matches-section container">
+            <h2 class="section-title reveal"><span>Последние</span> Результаты</h2>
+            <div id="matches-loader">
+                <!-- Контент загружается динамически из Python API -->
+            </div>
+        </section>
+    </main>
 
-    <!-- Подвал (Footer) -->
+    <!-- ПОДВАЛ (FOOTER) -->
     <footer>
         <div class="container footer-content">
-            <p>&copy; 2026 Rekinder eSports. Все права защищены.</p>
+            <p>&copy; 2026 Rekinder eSports | Профессиональная CS2 Организация. Все права защищены.</p>
             <div class="socials">
-                <!-- Telegram -->
                 <a href="https://t.me/RekindereSports" target="_blank" title="Telegram">
                     <i class="fab fa-telegram"></i>
                 </a>
-                <!-- Twitch -->
                 <a href="#" target="_blank" title="Twitch">
                     <i class="fab fa-twitch"></i>
                 </a>
-                <!-- TikTok -->
                 <a href="https://www.tiktok.com/@rekinderesports?_r=1&_t=ZS-98IDTRz7FzR" target="_blank" title="TikTok">
                     <i class="fab fa-tiktok"></i>
                 </a>
@@ -187,7 +199,8 @@
         </div>
     </footer>
 
-    <!-- Скрипты -->
+    <!-- ПОДКЛЮЧЕНИЕ СКРИПТОВ -->
     <script src="script.js"></script>
+
 </body>
 </html>

@@ -1,4 +1,4 @@
-// Plexus Animation Background
+// Анимация фона (Plexus)
 const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
@@ -66,7 +66,7 @@ window.addEventListener('resize', () => {
 init();
 animate();
 
-// Mobile Menu
+// Мобильное меню
 const menuToggle = document.getElementById('mobile-menu');
 const navLinks = document.querySelector('.nav-links');
 
@@ -75,10 +75,18 @@ menuToggle.addEventListener('click', () => {
     menuToggle.classList.toggle('is-active');
 });
 
-// Update Matches (Relative Path for Hosting)
+// Закрытие меню при клике (для мобилок)
+document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+    });
+});
+
+// Обновление матчей из БД через API
 async function updateMatches() {
     try {
         const response = await fetch('/api/matches');
+        if (!response.ok) return;
         const matches = await response.json();
         const loader = document.getElementById('matches-loader');
         if (!loader) return;
@@ -86,6 +94,8 @@ async function updateMatches() {
         loader.innerHTML = ''; 
         matches.forEach((m, index) => {
             const card = document.createElement('div');
+            
+            // Логика акцента: первая линия белая, остальные серые
             const accentClass = (index === 0) ? 'is-latest' : 'is-old';
             
             card.className = `match-card ${m.status.toLowerCase()} ${accentClass} reveal active`;
@@ -104,14 +114,14 @@ async function updateMatches() {
             loader.appendChild(card);
         });
     } catch (e) {
-        console.log("Error loading matches");
+        console.log("Database connection error");
     }
 }
 
 setInterval(updateMatches, 15000);
 updateMatches();
 
-// Reveal
+// Плавное появление элементов
 function reveal() {
     let reveals = document.querySelectorAll(".reveal");
     for (let i = 0; i < reveals.length; i++) {
@@ -126,7 +136,7 @@ function reveal() {
 window.addEventListener("scroll", reveal);
 reveal();
 
-// Smooth Anchors
+// Плавный скролл по якорям
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         if (this.hash !== "" && this.getAttribute('href').startsWith("#")) {

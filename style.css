@@ -1,4 +1,4 @@
-/* --- ПЕРЕМЕННЫЕ ЦВЕТОВ --- */
+/* --- ПЕРЕМЕННЫЕ --- */
 :root {
     --primary: #ffffff;
     --bg-dark: #000000;
@@ -8,7 +8,7 @@
     --captain-gold: #ffcc00;
 }
 
-/* --- СБРОС СТИЛЕЙ --- */
+/* --- ОБНУЛЕНИЕ --- */
 * {
     margin: 0;
     padding: 0;
@@ -26,6 +26,7 @@ body {
     overflow-x: hidden;
 }
 
+/* --- ФОН --- */
 #bgCanvas {
     position: fixed;
     top: 0;
@@ -41,7 +42,7 @@ body {
     padding: 0 20px;
 }
 
-/* --- ШАПКА САЙТА --- */
+/* --- ШАПКА --- */
 header {
     background: rgba(0, 0, 0, 0.9);
     backdrop-filter: blur(10px);
@@ -130,7 +131,7 @@ nav {
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
 }
 
-/* --- ГЛАВНЫЙ ЭКРАН (HERO) --- */
+/* --- ГЛАВНЫЙ ЭКРАН --- */
 .hero {
     height: 100vh;
     display: flex;
@@ -204,7 +205,7 @@ nav {
     color: var(--bg-dark);
 }
 
-/* --- ЗАГОЛОВКИ СЕКЦИЙ --- */
+/* --- ЗАГОЛОВКИ --- */
 .section-title {
     font-family: 'Orbitron', sans-serif;
     font-size: 2.2rem;
@@ -223,17 +224,17 @@ nav {
 
 .sub-title {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.3rem;
+    font-size: 1.6rem;
     text-align: center;
     width: 100%;
-    margin: 30px 0 20px;
+    margin: 40px 0 30px;
     color: var(--text-gray);
     font-weight: 300;
     text-transform: uppercase;
-    letter-spacing: 8px;
+    letter-spacing: 10px;
 }
 
-/* --- КАРТОЧКИ УПРАВЛЕНИЯ --- */
+/* --- КАРТОЧКИ --- */
 .staff-grid {
     display: flex;
     justify-content: center;
@@ -246,30 +247,10 @@ nav {
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.staff-tag {
-    font-size: 0.7rem;
-    color: var(--text-gray);
-    font-weight: bold;
-    margin-bottom: 5px;
-    letter-spacing: 2px;
-}
-
-/* --- КАРТОЧКИ ИГРОКОВ --- */
 .roster-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 15px;
-}
-
-.sub-roster-grid {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    width: 100%;
-}
-
-.sub-card {
-    width: 220px;
 }
 
 .player-card {
@@ -300,7 +281,6 @@ nav {
     border-top: 1px solid rgba(255,255,255,0.05);
 }
 
-/* Желтая светящаяся эмблема капитана */
 .player-tag {
     font-size: 0.6rem;
     background: var(--captain-gold);
@@ -314,8 +294,7 @@ nav {
 
 .player-info h3 {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 1rem;
     text-transform: uppercase;
 }
 
@@ -325,7 +304,7 @@ nav {
     font-weight: bold;
 }
 
-/* --- РЕЗУЛЬТАТЫ МАТЧЕЙ --- */
+/* --- МАТЧИ --- */
 .match-card {
     background: var(--card-bg);
     padding: 20px 40px;
@@ -336,16 +315,9 @@ nav {
     border: 1px solid rgba(255,255,255,0.05);
 }
 
-/* Линии для матчей */
-.match-card.is-latest.win {
-    border-left: 4px solid white;
-}
-.match-card.is-latest.loss {
-    border-left: 4px solid #333;
-}
-.match-card.is-old {
-    border-left: 4px solid #444;
-}
+.match-card.is-latest.win { border-left: 4px solid white; }
+.match-card.is-latest.loss { border-left: 4px solid #333; }
+.match-card.is-old { border-left: 4px solid #444; }
 
 .match-team {
     display: flex;
@@ -372,13 +344,6 @@ nav {
     text-align: center;
 }
 
-.match-status {
-    width: 10%;
-    text-align: right;
-    font-weight: bold;
-    font-family: 'Orbitron';
-}
-
 /* --- АНИМАЦИИ --- */
 .reveal {
     opacity: 0;
@@ -391,7 +356,35 @@ nav {
     transform: translateY(0);
 }
 
-/* --- ФУТЕР --- */
+/* --- МОБИЛКИ --- */
+@media (max-width: 768px) {
+    .menu-toggle { display: flex; flex-direction: column; gap: 5px; cursor: pointer; }
+    .menu-toggle .bar { width: 25px; height: 3px; background: #fff; }
+    
+    .nav-links {
+        position: fixed;
+        right: -100%;
+        top: 85px;
+        flex-direction: column;
+        background: rgba(0, 0, 0, 0.95);
+        width: 100%;
+        text-align: center;
+        transition: 0.3s;
+        padding: 40px 0;
+    }
+    
+    .nav-links.active { right: 0; }
+    .hero-btns { flex-direction: column; gap: 20px; align-items: center; }
+    .btn-primary, .btn-secondary { width: 80%; margin: 0; }
+    
+    .roster-grid { grid-template-columns: repeat(2, 1fr); }
+    .roster-grid .player-card:last-child {
+        grid-column: span 2;
+        width: 50%;
+        justify-self: center;
+    }
+}
+
 footer {
     padding: 60px 0;
     margin-top: 100px;
@@ -405,132 +398,4 @@ footer {
     margin: 0 15px;
     opacity: 0.6;
     transition: 0.3s;
-}
-
-.socials a:hover {
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-/* --- МОБИЛЬНАЯ ВЕРСИЯ (АДАПТАЦИЯ) --- */
-.menu-toggle {
-    display: none;
-    cursor: pointer;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.menu-toggle .bar {
-    width: 25px;
-    height: 3px;
-    background-color: #fff;
-    transition: 0.3s;
-}
-
-@media (max-width: 1024px) {
-    .roster-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    .title {
-        font-size: 4rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .menu-toggle {
-        display: flex;
-    }
-    .nav-links {
-        position: fixed;
-        right: -100%;
-        top: 85px;
-        flex-direction: column;
-        background: rgba(0, 0, 0, 0.95);
-        width: 100%;
-        text-align: center;
-        transition: 0.3s;
-        padding: 40px 0;
-        backdrop-filter: blur(10px);
-    }
-    .nav-links.active {
-        right: 0;
-    }
-    .nav-links li {
-        margin: 20px 0;
-    }
-
-    /* Отступы кнопок */
-    .hero-btns {
-        flex-direction: column;
-        gap: 20px;
-        align-items: center;
-    }
-    .btn-primary, 
-    .btn-secondary {
-        width: 80%;
-        margin: 0;
-    }
-    .title {
-        font-size: 3rem;
-    }
-
-    .staff-grid {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    /* Сетка игроков и центровка капитана */
-    .roster-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .roster-grid .player-card:nth-child(1) { order: 1; }
-    .roster-grid .player-card:nth-child(2) { order: 2; }
-    .roster-grid .player-card:nth-child(4) { order: 3; }
-    .roster-grid .player-card:nth-child(5) { order: 4; }
-    
-    /* Капитан вниз и по центру */
-    .roster-grid .player-card:nth-child(3) {
-        order: 5;
-        grid-column: span 2;
-        width: 50%;
-        justify-self: center;
-    }
-
-    .sub-roster-grid {
-        flex-direction: column;
-        align-items: center;
-    }
-    .sub-card {
-        width: 50% !important;
-    }
-
-    /* Выравнивание матчей */
-    .match-card {
-        padding: 15px;
-        display: grid;
-        grid-template-columns: 1fr 0.8fr 1fr;
-        align-items: center;
-        gap: 5px;
-    }
-    .match-team {
-        width: 100%;
-        flex-direction: column;
-        gap: 5px;
-        text-align: center;
-    }
-    .match-team.right {
-        justify-content: center;
-    }
-    .score {
-        width: 100%;
-        font-size: 1.4rem;
-        display: flex;
-        justify-content: center;
-    }
-    .match-status {
-        grid-column: span 3;
-        width: 100%;
-        text-align: center;
-        margin-top: 10px;
-    }
 }

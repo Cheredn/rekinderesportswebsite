@@ -1,4 +1,4 @@
-// Анимация фона (Plexus)
+// Plexus Animation Background
 const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
@@ -66,27 +66,50 @@ window.addEventListener('resize', () => {
 init();
 animate();
 
-// Мобильное меню
+// Mobile Menu
 const menuToggle = document.getElementById('mobile-menu');
 const navLinks = document.querySelector('.nav-links');
-
 menuToggle.addEventListener('click', () => {
     navLinks.classList.toggle('active');
-    menuToggle.classList.toggle('is-active');
 });
 
-// Закрытие меню при клике (для мобилок)
-document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-    });
-});
+// Update Roster from API
+async function updateRoster() {
+    try {
+        const response = await fetch('/api/players');
+        const players = await response.json();
+        const mainGrid = document.getElementById('main-roster-grid');
+        const juniorGrid = document.getElementById('junior-roster-grid');
+        
+        mainGrid.innerHTML = '';
+        juniorGrid.innerHTML = '';
 
-// Обновление матчей из БД через API
+        players.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'player-card reveal active';
+            card.innerHTML = `
+                <div class="player-img"><img src="${p.photo}" onerror="this.src='logo.png'"></div>
+                <div class="player-info">
+                    ${p.cap ? '<div class="player-tag">CAPTAIN</div>' : ''}
+                    <h3>${p.nick}</h3>
+                    <p>${p.role}</p>
+                </div>
+            `;
+            if (p.team === 'main') {
+                mainGrid.appendChild(card);
+            } else {
+                juniorGrid.appendChild(card);
+            }
+        });
+    } catch (e) {
+        console.log("Roster load error");
+    }
+}
+
+// Update Matches from API
 async function updateMatches() {
     try {
         const response = await fetch('/api/matches');
-        if (!response.ok) return;
         const matches = await response.json();
         const loader = document.getElementById('matches-loader');
         if (!loader) return;
@@ -94,8 +117,6 @@ async function updateMatches() {
         loader.innerHTML = ''; 
         matches.forEach((m, index) => {
             const card = document.createElement('div');
-            
-            // Логика акцента: первая линия белая, остальные серые
             const accentClass = (index === 0) ? 'is-latest' : 'is-old';
             
             card.className = `match-card ${m.status.toLowerCase()} ${accentClass} reveal active`;
@@ -114,14 +135,16 @@ async function updateMatches() {
             loader.appendChild(card);
         });
     } catch (e) {
-        console.log("Database connection error");
+        console.log("Matches load error");
     }
 }
 
-setInterval(updateMatches, 15000);
+// Initial Load
+updateRoster();
 updateMatches();
+setInterval(updateMatches, 15000);
 
-// Плавное появление элементов
+// Reveal Animation
 function reveal() {
     let reveals = document.querySelectorAll(".reveal");
     for (let i = 0; i < reveals.length; i++) {
@@ -132,21 +155,17 @@ function reveal() {
         }
     }
 }
-
 window.addEventListener("scroll", reveal);
 reveal();
 
-// Плавный скролл по якорям
+// Smooth Anchors
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
-        if (this.hash !== "" && this.getAttribute('href').startsWith("#")) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth'
-                });
-            }
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+            navLinks.classList.remove('active');
         }
     });
 });

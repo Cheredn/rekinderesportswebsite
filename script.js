@@ -102,7 +102,7 @@ async function updateRoster() {
             }
         });
     } catch (e) {
-        console.log("Roster load error");
+        console.log("Roster error");
     }
 }
 
@@ -135,16 +135,14 @@ async function updateMatches() {
             loader.appendChild(card);
         });
     } catch (e) {
-        console.log("Matches load error");
+        console.log("Matches error");
     }
 }
 
-// Initial Load
 updateRoster();
 updateMatches();
-setInterval(updateMatches, 15000);
 
-// Reveal Animation
+// Reveal
 function reveal() {
     let reveals = document.querySelectorAll(".reveal");
     for (let i = 0; i < reveals.length; i++) {
@@ -158,13 +156,15 @@ function reveal() {
 window.addEventListener("scroll", reveal);
 reveal();
 
-// Smooth Anchors
+// Smooth Scroll
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
         const target = document.querySelector(this.getAttribute('href'));
         if (target) {
-            target.scrollIntoView({ behavior: 'smooth' });
+            target.scrollIntoView({
+                behavior: 'smooth'
+            });
             navLinks.classList.remove('active');
         }
     });

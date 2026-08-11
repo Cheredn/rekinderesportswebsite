@@ -1,4 +1,4 @@
-/* --- ПЕРЕМЕННЫЕ --- */
+/* --- ОСНОВНЫЕ ПЕРЕМЕННЫЕ --- */
 :root {
     --primary: #ffffff;
     --bg-dark: #000000;
@@ -8,7 +8,7 @@
     --captain-gold: #ffcc00;
 }
 
-/* --- ОБНУЛЕНИЕ --- */
+/* --- СБРОС И БАЗА --- */
 * {
     margin: 0;
     padding: 0;
@@ -26,7 +26,6 @@ body {
     overflow-x: hidden;
 }
 
-/* --- ФОН --- */
 #bgCanvas {
     position: fixed;
     top: 0;
@@ -131,7 +130,7 @@ nav {
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
 }
 
-/* --- ГЛАВНЫЙ ЭКРАН --- */
+/* --- HERO --- */
 .hero {
     height: 100vh;
     display: flex;
@@ -205,7 +204,7 @@ nav {
     color: var(--bg-dark);
 }
 
-/* --- ЗАГОЛОВКИ --- */
+/* --- СЕКЦИИ --- */
 .section-title {
     font-family: 'Orbitron', sans-serif;
     font-size: 2.2rem;
@@ -234,7 +233,7 @@ nav {
     letter-spacing: 10px;
 }
 
-/* --- КАРТОЧКИ --- */
+/* --- СЕТКИ И КАРТОЧКИ --- */
 .staff-grid {
     display: flex;
     justify-content: center;
@@ -245,6 +244,14 @@ nav {
 .staff-card {
     width: 300px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.staff-tag {
+    font-size: 0.7rem;
+    color: var(--text-gray);
+    font-weight: bold;
+    margin-bottom: 5px;
+    letter-spacing: 2px;
 }
 
 .roster-grid {
@@ -344,6 +351,13 @@ nav {
     text-align: center;
 }
 
+.match-status {
+    width: 10%;
+    text-align: right;
+    font-weight: bold;
+    font-family: 'Orbitron';
+}
+
 /* --- АНИМАЦИИ --- */
 .reveal {
     opacity: 0;
@@ -354,35 +368,6 @@ nav {
 .reveal.active {
     opacity: 1;
     transform: translateY(0);
-}
-
-/* --- МОБИЛКИ --- */
-@media (max-width: 768px) {
-    .menu-toggle { display: flex; flex-direction: column; gap: 5px; cursor: pointer; }
-    .menu-toggle .bar { width: 25px; height: 3px; background: #fff; }
-    
-    .nav-links {
-        position: fixed;
-        right: -100%;
-        top: 85px;
-        flex-direction: column;
-        background: rgba(0, 0, 0, 0.95);
-        width: 100%;
-        text-align: center;
-        transition: 0.3s;
-        padding: 40px 0;
-    }
-    
-    .nav-links.active { right: 0; }
-    .hero-btns { flex-direction: column; gap: 20px; align-items: center; }
-    .btn-primary, .btn-secondary { width: 80%; margin: 0; }
-    
-    .roster-grid { grid-template-columns: repeat(2, 1fr); }
-    .roster-grid .player-card:last-child {
-        grid-column: span 2;
-        width: 50%;
-        justify-self: center;
-    }
 }
 
 footer {
@@ -397,5 +382,109 @@ footer {
     font-size: 1.3rem;
     margin: 0 15px;
     opacity: 0.6;
-    transition: 0.3s;
+}
+
+/* ==========================================
+   АДАПТАЦИЯ ДЛЯ МОБИЛОК (MEDIA QUERIES)
+   ========================================== */
+
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        cursor: pointer;
+    }
+
+    .menu-toggle .bar {
+        width: 25px;
+        height: 3px;
+        background: #fff;
+    }
+
+    .nav-links {
+        position: fixed;
+        right: -100%;
+        top: 85px;
+        flex-direction: column;
+        background: rgba(0, 0, 0, 0.95);
+        width: 100%;
+        text-align: center;
+        transition: 0.3s;
+        padding: 40px 0;
+    }
+
+    .nav-links.active {
+        right: 0;
+    }
+
+    .hero-btns {
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .btn-primary, 
+    .btn-secondary {
+        width: 80%;
+        margin: 0;
+    }
+
+    .title {
+        font-size: 3rem;
+    }
+
+    .staff-grid {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* --- РОСТЕР НА ТЕЛЕФОНАХ --- */
+    .roster-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Устанавливаем визуальный порядок (order) */
+    .roster-grid .player-card:nth-child(1) { order: 1; } /* SAL1CH */
+    .roster-grid .player-card:nth-child(2) { order: 2; } /* AWESOME */
+    .roster-grid .player-card:nth-child(4) { order: 3; } /* TAKUYA */
+    .roster-grid .player-card:nth-child(5) { order: 4; } /* LASQUA */
+    
+    /* Капитан ShnyroQ (был 3-м в коде) теперь уходит в самый низ (order 5) */
+    .roster-grid .player-card:nth-child(3) {
+        order: 5;
+        grid-column: span 2;
+        width: 50%;
+        justify-self: center;
+    }
+
+    /* Исправление размеров запасных */
+    #junior-roster-grid .player-card {
+        width: 100%;
+    }
+
+    /* Исправление матчей */
+    .match-card {
+        padding: 15px;
+        display: grid;
+        grid-template-columns: 1fr 0.8fr 1fr;
+        gap: 5px;
+    }
+
+    .match-team {
+        width: 100%;
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
+    }
+
+    .score {
+        font-size: 1.4rem;
+    }
+
+    .match-status {
+        grid-column: span 3;
+        text-align: center;
+        margin-top: 10px;
+    }
 }

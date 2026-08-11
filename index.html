@@ -7,23 +7,21 @@
     
     <title>Rekinder eSports | Official Site — Профессиональная команда CS2</title>
 
-    <!-- SEO Иконка и Описание -->
+    <!-- SEO & Favicon -->
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
     <meta name="description" content="Официальный сайт киберспортивной организации Rekinder eSports. Составы Main и Junior, результаты матчей и руководство.">
-    <meta name="keywords" content="Rekinder, Rekinder eSports, REES, Рекиндер, кс2 команда, киберспорт, ShnyroQ, AWESOME, SAL1CH, TAKUYA, MOTT1VV, LASQUA">
+    <meta name="keywords" content="Rekinder, Rekinder eSports, REES, Рекиндер, кс2 команда, киберспорт, ShnyroQ, AWESOME, SAL1CH, TAKUYA, LASQUA">
 
-    <!-- Шрифты и Стили -->
+    <!-- CSS & Fonts -->
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
-    <!-- Анимированный фон (частицы) -->
     <canvas id="bgCanvas"></canvas>
 
-    <!-- Шапка сайта -->
     <header>
         <nav class="container">
             <div class="logo-area">
@@ -33,7 +31,6 @@
                 </div>
             </div>
             
-            <!-- Кнопка меню для мобилок -->
             <div class="menu-toggle" id="mobile-menu">
                 <span class="bar"></span>
                 <span class="bar"></span>
@@ -51,7 +48,6 @@
     </header>
 
     <main>
-        <!-- Главный экран (Hero) -->
         <section id="home" class="hero">
             <div class="hero-content reveal">
                 <h4 class="subtitle">Professional CS2 Team</h4>
@@ -64,7 +60,6 @@
             </div>
         </section>
 
-        <!-- Руководство (Management) -->
         <section id="staff" class="container">
             <h2 class="section-title reveal">Management</h2>
             <div class="staff-grid">
@@ -85,31 +80,26 @@
             </div>
         </section>
 
-        <!-- Секция Составов -->
         <section id="roster" class="roster-section container">
-            <!-- Main Состав -->
             <h2 class="section-title reveal"><span>Main</span> Roster</h2>
             <div id="main-roster-grid" class="roster-grid">
-                <!-- Загружается из базы данных -->
+                <!-- Загружается из БД -->
             </div>
 
-            <!-- Junior Состав -->
             <h3 class="sub-title reveal" style="margin-top: 100px;"><span>Junior</span> Roster</h3>
             <div id="junior-roster-grid" class="roster-grid">
-                <!-- Загружается из базы данных -->
+                <!-- Загружается из БД -->
             </div>
         </section>
 
-        <!-- Последние результаты -->
         <section id="matches" class="matches-section container">
             <h2 class="section-title reveal"><span>Последние</span> Результаты</h2>
             <div id="matches-loader">
-                <!-- Загружается из базы данных -->
+                <!-- Загружается из БД -->
             </div>
         </section>
     </main>
 
-    <!-- Подвал (Footer) -->
     <footer>
         <div class="container footer-content">
             <p>&copy; 2026 Rekinder eSports. Все права защищены.</p>

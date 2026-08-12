@@ -11,7 +11,7 @@
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
     <meta name="description" content="Официальный сайт киберспортивной организации Rekinder eSports. Составы Main и Junior, результаты матчей и руководство.">
-    <meta name="keywords" content="Rekinder, Rekinder eSports, REES, Рекиндер, кс2 команда, киберспорт, ShnyroQ, AWESOME, SAL1CH, TAKUYA, LASQUA">
+    <meta name="keywords" content="Rekinder, Rekinder eSports, REES, Рекиндер, кс2 команда, киберспорт, ShnyroQ, AWESOME, SAL1CH, TAKUYA, MOTT1VV, LASQUA">
 
     <!-- CSS & Fonts -->
     <link rel="stylesheet" href="style.css">
@@ -20,8 +20,10 @@
 </head>
 <body>
 
+    <!-- Анимированный фон (частицы) -->
     <canvas id="bgCanvas"></canvas>
 
+    <!-- Шапка сайта -->
     <header>
         <nav class="container">
             <div class="logo-area">
@@ -31,6 +33,7 @@
                 </div>
             </div>
             
+            <!-- Кнопка мобильного меню -->
             <div class="menu-toggle" id="mobile-menu">
                 <span class="bar"></span>
                 <span class="bar"></span>
@@ -48,6 +51,7 @@
     </header>
 
     <main>
+        <!-- Секция Hero -->
         <section id="home" class="hero">
             <div class="hero-content reveal">
                 <h4 class="subtitle">Professional CS2 Team</h4>
@@ -60,6 +64,7 @@
             </div>
         </section>
 
+        <!-- Секция Management -->
         <section id="staff" class="container">
             <h2 class="section-title reveal">Management</h2>
             <div class="staff-grid">
@@ -80,23 +85,25 @@
             </div>
         </section>
 
+        <!-- Секция Roster -->
         <section id="roster" class="roster-section container">
+            <!-- Main -->
             <h2 class="section-title reveal"><span>Main</span> Roster</h2>
             <div id="main-roster-grid" class="roster-grid">
-                <!-- Загружается из БД -->
+                <!-- Генерируется из JS -->
             </div>
 
+            <!-- Junior -->
             <h3 class="sub-title reveal" style="margin-top: 100px;"><span>Junior</span> Roster</h3>
             <div id="junior-roster-grid" class="roster-grid">
-                <!-- Загружается из БД -->
+                <!-- Генерируется из JS -->
             </div>
         </section>
 
+        <!-- Результаты -->
         <section id="matches" class="matches-section container">
             <h2 class="section-title reveal"><span>Последние</span> Результаты</h2>
-            <div id="matches-loader">
-                <!-- Загружается из БД -->
-            </div>
+            <div id="matches-loader"></div>
         </section>
     </main>
 

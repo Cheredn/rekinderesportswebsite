@@ -130,7 +130,7 @@ nav {
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
 }
 
-/* --- HERO --- */
+/* --- HERO SECTION --- */
 .hero {
     height: 100vh;
     display: flex;
@@ -204,7 +204,7 @@ nav {
     color: var(--bg-dark);
 }
 
-/* --- СЕКЦИИ --- */
+/* --- ЗАГОЛОВКИ СЕКЦИЙ --- */
 .section-title {
     font-family: 'Orbitron', sans-serif;
     font-size: 2.2rem;
@@ -382,6 +382,7 @@ footer {
     font-size: 1.3rem;
     margin: 0 15px;
     opacity: 0.6;
+    transition: 0.3s;
 }
 
 /* ==========================================
@@ -418,6 +419,7 @@ footer {
         right: 0;
     }
 
+    /* Отступы кнопок Hero */
     .hero-btns {
         flex-direction: column;
         gap: 20px;
@@ -439,31 +441,37 @@ footer {
         align-items: center;
     }
 
-    /* --- РОСТЕР НА ТЕЛЕФОНАХ --- */
+    /* --- НАСТРОЙКИ СЕТКИ ИГРОКОВ --- */
     .roster-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
     }
 
-    /* Устанавливаем визуальный порядок (order) */
-    .roster-grid .player-card:nth-child(1) { order: 1; } /* SAL1CH */
-    .roster-grid .player-card:nth-child(2) { order: 2; } /* AWESOME */
-    .roster-grid .player-card:nth-child(4) { order: 3; } /* TAKUYA */
-    .roster-grid .player-card:nth-child(5) { order: 4; } /* LASQUA */
-    
-    /* Капитан ShnyroQ (был 3-м в коде) теперь уходит в самый низ (order 5) */
-    .roster-grid .player-card:nth-child(3) {
+    .player-card {
+        width: 100% !important;
+        max-width: 100%;
+    }
+
+    /* MAIN ROSTER: Капитан (3-й в HTML) вниз и по центру */
+    #main-roster-grid .player-card:nth-child(1) { order: 1; }
+    #main-roster-grid .player-card:nth-child(2) { order: 2; }
+    #main-roster-grid .player-card:nth-child(4) { order: 3; }
+    #main-roster-grid .player-card:nth-child(5) { order: 4; }
+    #main-roster-grid .player-card:nth-child(3) {
         order: 5;
         grid-column: span 2;
-        width: 50%;
+        width: 50% !important;
         justify-self: center;
     }
 
-    /* Исправление размеров запасных */
-    #junior-roster-grid .player-card {
-        width: 100%;
+    /* JUNIOR ROSTER: 5-й игрок вниз и по центру (такого же размера) */
+    #junior-roster-grid .player-card:nth-child(5) {
+        grid-column: span 2;
+        width: 50% !important;
+        justify-self: center;
     }
 
-    /* Исправление матчей */
+    /* --- МАТЧИ --- */
     .match-card {
         padding: 15px;
         display: grid;

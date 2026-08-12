@@ -1,4 +1,4 @@
-/* --- ОСНОВНЫЕ ПЕРЕМЕННЫЕ --- */
+/* --- ПЕРЕМЕННЫЕ --- */
 :root {
     --primary: #ffffff;
     --bg-dark: #000000;
@@ -8,7 +8,7 @@
     --captain-gold: #ffcc00;
 }
 
-/* --- СБРОС И БАЗА --- */
+/* --- ОСНОВНЫЕ СТИЛИ --- */
 * {
     margin: 0;
     padding: 0;
@@ -130,7 +130,7 @@ nav {
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
 }
 
-/* --- HERO --- */
+/* --- HERO SECTION --- */
 .hero {
     height: 100vh;
     display: flex;
@@ -204,7 +204,7 @@ nav {
     color: var(--bg-dark);
 }
 
-/* --- СЕКЦИИ --- */
+/* --- ТЕКСТЫ --- */
 .section-title {
     font-family: 'Orbitron', sans-serif;
     font-size: 2.2rem;
@@ -399,7 +399,7 @@ footer {
     .menu-toggle .bar {
         width: 25px;
         height: 3px;
-        background: #fff;
+        background-color: #fff;
     }
 
     .nav-links {
@@ -418,6 +418,7 @@ footer {
         right: 0;
     }
 
+    /* Hero Buttons Gap */
     .hero-btns {
         flex-direction: column;
         gap: 20px;
@@ -444,23 +445,25 @@ footer {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    /* Устанавливаем визуальный порядок (order) */
-    .roster-grid .player-card:nth-child(1) { order: 1; } /* SAL1CH */
-    .roster-grid .player-card:nth-child(2) { order: 2; } /* AWESOME */
-    .roster-grid .player-card:nth-child(4) { order: 3; } /* TAKUYA */
-    .roster-grid .player-card:nth-child(5) { order: 4; } /* LASQUA */
-    
-    /* Капитан ShnyroQ (был 3-м в коде) теперь уходит в самый низ (order 5) */
-    .roster-grid .player-card:nth-child(3) {
-        order: 5;
-        grid-column: span 2;
-        width: 50%;
-        justify-self: center;
+    /* Все карточки (включая капитанские или одиночные) ограничиваем по ширине */
+    .roster-grid .player-card {
+        width: 100%;
+        max-width: 100%;
     }
 
-    /* Исправление размеров запасных */
+    /* Если карточка стоит одна в ряду (3-я или 5-я), она центрируется и НЕ РАСТЯГИВАЕТСЯ */
+    .roster-grid .player-card[style*="order: 5"],
+    .roster-grid .player-card:nth-child(5) {
+        grid-column: span 2;
+        width: 50% !important; /* Делаем маленькой, как остальные */
+        justify-self: center; /* Центрируем */
+    }
+
+    /* Для Junior если там например 1 человек */
     #junior-roster-grid .player-card {
-        width: 100%;
+        grid-column: span 2;
+        width: 50% !important;
+        justify-self: center;
     }
 
     /* Исправление матчей */

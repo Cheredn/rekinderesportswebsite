@@ -84,9 +84,17 @@ async function updateRoster() {
         mainGrid.innerHTML = '';
         juniorGrid.innerHTML = '';
 
-        players.forEach(p => {
+        players.forEach((p, index) => {
             const card = document.createElement('div');
             card.className = 'player-card reveal active';
+            
+            // Если это капитан в MAIN составе, на мобилках даем ему order 5
+            if(p.cap && p.team === 'main') {
+                card.style.order = "5";
+            } else {
+                card.style.order = index;
+            }
+
             card.innerHTML = `
                 <div class="player-img"><img src="${p.photo}" onerror="this.src='logo.png'"></div>
                 <div class="player-info">
@@ -95,11 +103,8 @@ async function updateRoster() {
                     <p>${p.role}</p>
                 </div>
             `;
-            if (p.team === 'main') {
-                mainGrid.appendChild(card);
-            } else {
-                juniorGrid.appendChild(card);
-            }
+            if (p.team === 'main') mainGrid.appendChild(card);
+            else juniorGrid.appendChild(card);
         });
     } catch (e) {
         console.log("Roster error");
@@ -141,8 +146,9 @@ async function updateMatches() {
 
 updateRoster();
 updateMatches();
+setInterval(updateMatches, 15000);
 
-// Reveal
+// Reveal Animation
 function reveal() {
     let reveals = document.querySelectorAll(".reveal");
     for (let i = 0; i < reveals.length; i++) {

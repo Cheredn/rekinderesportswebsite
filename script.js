@@ -1,10 +1,11 @@
-// Plexus Animation
+// Plexus Animation Background
 const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 let particlesArray = [];
+
 class Particle {
     constructor() {
         this.x = Math.random() * canvas.width;
@@ -29,7 +30,9 @@ class Particle {
 
 function init() {
     particlesArray = [];
-    for (let i = 0; i < 80; i++) particlesArray.push(new Particle());
+    for (let i = 0; i < 80; i++) {
+        particlesArray.push(new Particle());
+    }
 }
 
 function animate() {
@@ -40,9 +43,9 @@ function animate() {
         for (let j = i; j < particlesArray.length; j++) {
             const dx = particlesArray[i].x - particlesArray[j].x;
             const dy = particlesArray[i].y - particlesArray[j].y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 150) {
-                ctx.strokeStyle = `rgba(255, 255, 255, ${1 - dist/150})`;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < 150) {
+                ctx.strokeStyle = `rgba(255, 255, 255, ${1 - distance/150})`;
                 ctx.lineWidth = 0.5;
                 ctx.beginPath();
                 ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
@@ -54,15 +57,23 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    init();
+});
+
 init();
 animate();
 
 // Mobile Menu
 const menuToggle = document.getElementById('mobile-menu');
 const navLinks = document.querySelector('.nav-links');
-menuToggle.addEventListener('click', () => { navLinks.classList.toggle('active'); });
+menuToggle.addEventListener('click', () => {
+    navLinks.classList.toggle('active');
+});
 
-// API: Players
+// Update Roster from API
 async function updateRoster() {
     try {
         const response = await fetch('/api/players');
@@ -70,7 +81,8 @@ async function updateRoster() {
         const mainGrid = document.getElementById('main-roster-grid');
         const juniorGrid = document.getElementById('junior-roster-grid');
         
-        mainGrid.innerHTML = ''; juniorGrid.innerHTML = '';
+        mainGrid.innerHTML = '';
+        juniorGrid.innerHTML = '';
 
         players.forEach(p => {
             const card = document.createElement('div');
@@ -83,32 +95,48 @@ async function updateRoster() {
                     <p>${p.role}</p>
                 </div>
             `;
-            if (p.team === 'main') mainGrid.appendChild(card);
-            else juniorGrid.appendChild(card);
+            if (p.team === 'main') {
+                mainGrid.appendChild(card);
+            } else {
+                juniorGrid.appendChild(card);
+            }
         });
-    } catch (e) { console.log("Roster error"); }
+    } catch (e) {
+        console.log("Roster error");
+    }
 }
 
-// API: Matches
+// Update Matches from API
 async function updateMatches() {
     try {
         const response = await fetch('/api/matches');
         const matches = await response.json();
         const loader = document.getElementById('matches-loader');
+        if (!loader) return;
+        
         loader.innerHTML = ''; 
         matches.forEach((m, index) => {
             const card = document.createElement('div');
-            const accent = (index === 0) ? 'is-latest' : 'is-old';
-            card.className = `match-card ${m.status.toLowerCase()} ${accent} reveal active`;
+            const accentClass = (index === 0) ? 'is-latest' : 'is-old';
+            
+            card.className = `match-card ${m.status.toLowerCase()} ${accentClass} reveal active`;
             card.innerHTML = `
-                <div class="match-team"><img src="logo.png" class="match-team-logo"><div class="team-name">REKINDER</div></div>
+                <div class="match-team">
+                    <img src="logo.png" class="match-team-logo">
+                    <div class="team-name">REKINDER</div>
+                </div>
                 <div class="score">${m.score}</div>
-                <div class="match-team right"><img src="/opponents/${m.opp_logo}" class="match-team-logo"><div class="opponent">${m.opponent}</div></div>
+                <div class="match-team right">
+                    <img src="/opponents/${m.opp_logo}" class="match-team-logo">
+                    <div class="opponent">${m.opponent}</div>
+                </div>
                 <div class="match-status">${m.status}</div>
             `;
             loader.appendChild(card);
         });
-    } catch (e) { console.log("Matches error"); }
+    } catch (e) {
+        console.log("Matches error");
+    }
 }
 
 updateRoster();
@@ -120,8 +148,24 @@ function reveal() {
     for (let i = 0; i < reveals.length; i++) {
         let windowHeight = window.innerHeight;
         let elementTop = reveals[i].getBoundingClientRect().top;
-        if (elementTop < windowHeight - 100) reveals[i].classList.add("active");
+        if (elementTop < windowHeight - 100) {
+            reveals[i].classList.add("active");
+        }
     }
 }
 window.addEventListener("scroll", reveal);
 reveal();
+
+// Smooth Scroll
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth'
+            });
+            navLinks.classList.remove('active');
+        }
+    });
+});

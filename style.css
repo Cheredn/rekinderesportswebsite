@@ -1,3 +1,4 @@
+/* --- ОСНОВНЫЕ ПЕРЕМЕННЫЕ --- */
 :root {
     --primary: #ffffff;
     --bg-dark: #000000;
@@ -7,6 +8,7 @@
     --captain-gold: #ffcc00;
 }
 
+/* --- СБРОС И БАЗА --- */
 * {
     margin: 0;
     padding: 0;
@@ -39,7 +41,7 @@ body {
     padding: 0 20px;
 }
 
-/* --- HEADER --- */
+/* --- ШАПКА --- */
 header {
     background: rgba(0, 0, 0, 0.9);
     backdrop-filter: blur(10px);
@@ -93,8 +95,25 @@ nav {
     color: var(--text-main);
     font-weight: 600;
     font-size: 0.8rem;
-    text-transform: uppercase;
+    position: relative;
+    padding: 5px 0;
     transition: 0.3s;
+    text-transform: uppercase;
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: var(--primary);
+    transition: 0.3s;
+}
+
+.nav-links a:hover::after {
+    width: 100%;
 }
 
 .btn-join {
@@ -104,6 +123,11 @@ nav {
     border-radius: 2px;
     font-weight: bold;
     transition: 0.3s ease;
+}
+
+.btn-join:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
 }
 
 /* --- HERO --- */
@@ -119,6 +143,7 @@ nav {
     font-family: 'Orbitron', sans-serif;
     font-size: 5rem;
     font-weight: 900;
+    line-height: 1;
     margin-bottom: 20px;
 }
 
@@ -126,10 +151,24 @@ nav {
     color: var(--primary);
 }
 
+.subtitle {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--text-gray);
+    font-weight: 300;
+    letter-spacing: 6px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
 .hero p {
     max-width: 600px;
     margin: 0 auto 60px;
     color: var(--text-gray);
+}
+
+.hero-btns {
+    display: flex;
+    justify-content: center;
 }
 
 .btn-primary, 
@@ -144,25 +183,84 @@ nav {
     text-transform: uppercase;
 }
 
-.btn-primary { background: var(--primary); color: var(--bg-dark); }
-.btn-secondary { border: 1px solid var(--primary); color: var(--primary); }
+.btn-primary {
+    background: var(--primary);
+    color: var(--bg-dark);
+}
 
 .btn-primary:hover, 
 .btn-secondary:hover {
     transform: translateY(-5px) scale(1.05);
 }
 
-/* --- ROSTER FLEX SYSTEM --- */
-.roster-flex-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center; /* Центрирует игроков, если их меньше 5 или в последнем ряду */
-    gap: 15px;
+.btn-secondary {
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    background: transparent;
+}
+
+.btn-secondary:hover {
+    background: var(--primary);
+    color: var(--bg-dark);
+}
+
+/* --- СЕКЦИИ --- */
+.section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin: 80px 0 40px;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+}
+
+.section-title span {
+    color: var(--text-main);
+    font-weight: 600;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+}
+
+.sub-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.6rem;
+    text-align: center;
     width: 100%;
+    margin: 40px 0 30px;
+    color: var(--text-gray);
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 10px;
+}
+
+/* --- СЕТКИ И КАРТОЧКИ --- */
+.staff-grid {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 50px;
+}
+
+.staff-card {
+    width: 300px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.staff-tag {
+    font-size: 0.7rem;
+    color: var(--text-gray);
+    font-weight: bold;
+    margin-bottom: 5px;
+    letter-spacing: 2px;
+}
+
+.roster-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
 }
 
 .player-card {
-    flex: 0 1 260px; /* Фиксированная ширина карточки */
     background: var(--card-bg);
     border: 1px solid rgba(255,255,255,0.05);
     transition: 0.4s;
@@ -170,7 +268,7 @@ nav {
 
 .player-card:hover {
     border-color: var(--primary);
-    transform: translateY(-10px);
+    transform: translateY(-5px);
 }
 
 .player-img img {
@@ -210,9 +308,10 @@ nav {
 .player-info p {
     color: var(--text-gray);
     font-size: 0.75rem;
+    font-weight: bold;
 }
 
-/* --- MATCHES --- */
+/* --- МАТЧИ --- */
 .match-card {
     background: var(--card-bg);
     padding: 20px 40px;
@@ -234,7 +333,9 @@ nav {
     width: 35%;
 }
 
-.match-team.right { justify-content: flex-end; }
+.match-team.right {
+    justify-content: flex-end;
+}
 
 .match-team-logo {
     width: 40px;
@@ -246,14 +347,61 @@ nav {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.8rem;
     font-weight: bold;
+    width: 20%;
+    text-align: center;
 }
 
-/* --- MOBILE --- */
-.menu-toggle { display: none; cursor: pointer; flex-direction: column; gap: 5px; }
-.menu-toggle .bar { width: 25px; height: 3px; background: #fff; }
+.match-status {
+    width: 10%;
+    text-align: right;
+    font-weight: bold;
+    font-family: 'Orbitron';
+}
+
+/* --- АНИМАЦИИ --- */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: 0.8s;
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+footer {
+    padding: 60px 0;
+    margin-top: 100px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+}
+
+.socials a {
+    color: white;
+    font-size: 1.3rem;
+    margin: 0 15px;
+    opacity: 0.6;
+}
+
+/* ==========================================
+   АДАПТАЦИЯ ДЛЯ МОБИЛОК (MEDIA QUERIES)
+   ========================================== */
 
 @media (max-width: 768px) {
-    .menu-toggle { display: flex; }
+    .menu-toggle {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        cursor: pointer;
+    }
+
+    .menu-toggle .bar {
+        width: 25px;
+        height: 3px;
+        background: #fff;
+    }
+
     .nav-links {
         position: fixed;
         right: -100%;
@@ -265,28 +413,78 @@ nav {
         transition: 0.3s;
         padding: 40px 0;
     }
-    .nav-links.active { right: 0; }
-    
-    .hero-btns { flex-direction: column; gap: 20px; align-items: center; }
-    .btn-primary, .btn-secondary { width: 80%; margin: 0; }
 
-    .player-card {
-        flex: 0 1 46%; /* 2 карточки в ряд с небольшим зазором */
+    .nav-links.active {
+        right: 0;
     }
 
+    .hero-btns {
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .btn-primary, 
+    .btn-secondary {
+        width: 80%;
+        margin: 0;
+    }
+
+    .title {
+        font-size: 3rem;
+    }
+
+    .staff-grid {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* --- РОСТЕР НА ТЕЛЕФОНАХ --- */
+    .roster-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Устанавливаем визуальный порядок (order) */
+    .roster-grid .player-card:nth-child(1) { order: 1; } /* SAL1CH */
+    .roster-grid .player-card:nth-child(2) { order: 2; } /* AWESOME */
+    .roster-grid .player-card:nth-child(4) { order: 3; } /* TAKUYA */
+    .roster-grid .player-card:nth-child(5) { order: 4; } /* LASQUA */
+    
+    /* Капитан ShnyroQ (был 3-м в коде) теперь уходит в самый низ (order 5) */
+    .roster-grid .player-card:nth-child(3) {
+        order: 5;
+        grid-column: span 2;
+        width: 50%;
+        justify-self: center;
+    }
+
+    /* Исправление размеров запасных */
+    #junior-roster-grid .player-card {
+        width: 100%;
+    }
+
+    /* Исправление матчей */
     .match-card {
         padding: 15px;
         display: grid;
         grid-template-columns: 1fr 0.8fr 1fr;
         gap: 5px;
     }
-    .match-team { width: 100%; flex-direction: column; text-align: center; gap: 5px; }
-    .score { font-size: 1.4rem; }
+
+    .match-team {
+        width: 100%;
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
+    }
+
+    .score {
+        font-size: 1.4rem;
+    }
+
+    .match-status {
+        grid-column: span 3;
+        text-align: center;
+        margin-top: 10px;
+    }
 }
-
-/* Секции */
-.section-title { font-family: 'Orbitron', sans-serif; font-size: 2.2rem; text-align: center; margin: 80px 0 40px; text-transform: uppercase; }
-.sub-title { font-family: 'Orbitron', sans-serif; font-size: 1.6rem; text-align: center; margin: 40px 0; text-transform: uppercase; color: var(--text-gray); }
-
-footer { padding: 60px 0; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; }
-.socials a { color: white; font-size: 1.3rem; margin: 0 15px; opacity: 0.6; }

@@ -79,6 +79,8 @@ nav { display: flex; justify-content: space-between; align-items: center; }
     text-transform: uppercase;
 }
 .btn-primary { background: var(--primary); color: var(--bg-dark); }
+.btn-primary:hover { transform: translateY(-5px) scale(1.05); }
+
 .btn-secondary { border: 1px solid var(--primary); color: var(--primary); background: transparent; }
 .btn-secondary:hover { background: var(--primary); color: var(--bg-dark); transform: translateY(-5px) scale(1.05); }
 

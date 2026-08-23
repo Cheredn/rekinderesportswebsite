@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Rekinder eSports | Official Site</title>
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="style.css">
@@ -10,14 +11,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+
     <canvas id="bgCanvas"></canvas>
+
     <header>
         <nav class="container">
             <div class="logo-area">
-                <img src="logo.png" alt="REES" class="header-logo">
+                <img src="logo.png" alt="REES Logo" class="header-logo">
                 <div class="logo-text">REKINDER <span>eSports</span></div>
             </div>
-            <div class="menu-toggle" id="mobile-menu"><span class="bar"></span><span class="bar"></span><span class="bar"></span></div>
+            <div class="menu-toggle" id="mobile-menu">
+                <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            </div>
             <ul class="nav-links">
                 <li><a href="#home">Главная</a></li>
                 <li><a href="#staff">Руководство</a></li>
@@ -58,8 +63,7 @@
         <section id="roster" class="roster-section container">
             <h2 class="section-title reveal"><span>Main</span> Roster</h2>
             <div id="main-roster-grid" class="roster-grid"></div>
-
-            <h3 class="sub-title reveal" style="margin-top: 100px;"><span>Junior</span> Roster</h3>
+            <h3 class="sub-title reveal"><span>Junior</span> Roster</h3>
             <div id="junior-roster-grid" class="roster-grid"></div>
         </section>
 
@@ -79,6 +83,7 @@
             </div>
         </div>
     </footer>
+
     <script src="script.js"></script>
 </body>
 </html>

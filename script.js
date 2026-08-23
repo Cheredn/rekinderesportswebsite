@@ -1,11 +1,7 @@
-// Анимация частиц на фоне
 const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 let particlesArray = [];
-
 class Particle {
     constructor() {
         this.x = Math.random() * canvas.width;
@@ -15,85 +11,46 @@ class Particle {
         this.speedY = Math.random() * 1 - 0.5;
     }
     update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
+        this.x += this.speedX; this.y += this.speedY;
         if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
         if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
     }
-    draw() {
-        ctx.fillStyle = 'white';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-    }
+    draw() { ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
 }
-
-function init() {
-    particlesArray = [];
-    for (let i = 0; i < 80; i++) {
-        particlesArray.push(new Particle());
-    }
-}
-
+function init() { particlesArray = []; for (let i = 0; i < 80; i++) particlesArray.push(new Particle()); }
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let i = 0; i < particlesArray.length; i++) {
-        particlesArray[i].update();
-        particlesArray[i].draw();
+        particlesArray[i].update(); particlesArray[i].draw();
         for (let j = i; j < particlesArray.length; j++) {
             const dx = particlesArray[i].x - particlesArray[j].x;
             const dy = particlesArray[i].y - particlesArray[j].y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 150) {
-                ctx.strokeStyle = `rgba(255, 255, 255, ${1 - distance/150})`;
-                ctx.lineWidth = 0.5;
-                ctx.beginPath();
-                ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
-                ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
-                ctx.stroke();
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 150) {
+                ctx.strokeStyle = `rgba(255, 255, 255, ${1 - dist/150})`;
+                ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(particlesArray[i].x, particlesArray[i].y); ctx.lineTo(particlesArray[j].x, particlesArray[j].y); ctx.stroke();
             }
         }
     }
     requestAnimationFrame(animate);
 }
+window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; init(); });
+init(); animate();
 
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    init();
-});
-
-init();
-animate();
-
-// Мобильное меню
 const menuToggle = document.getElementById('mobile-menu');
 const navLinks = document.querySelector('.nav-links');
-if (menuToggle) {
-    menuToggle.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-    });
-}
+menuToggle.addEventListener('click', () => { navLinks.classList.toggle('active'); });
 
-// Загрузка игроков
 async function updateRoster() {
     try {
         const response = await fetch('/api/players');
         const players = await response.json();
         const mainGrid = document.getElementById('main-roster-grid');
         const juniorGrid = document.getElementById('junior-roster-grid');
-        
         mainGrid.innerHTML = ''; juniorGrid.innerHTML = '';
-
-        players.forEach((p, index) => {
+        players.forEach(p => {
             const card = document.createElement('div');
             card.className = 'player-card reveal active';
-            
-            // Если на мобилке и это Капитан в MAIN составе — отправляем его вниз (order: 10)
-            if (window.innerWidth <= 768 && p.cap && p.team === 'main') {
-                card.style.order = "10";
-            }
-
             card.innerHTML = `
                 <div class="player-img"><img src="${p.photo}" onerror="this.src='logo.png'"></div>
                 <div class="player-info">
@@ -101,14 +58,12 @@ async function updateRoster() {
                     <h3>${p.nick}</h3>
                     <p>${p.role}</p>
                 </div>`;
-            
             if (p.team === 'main') mainGrid.appendChild(card);
             else juniorGrid.appendChild(card);
         });
     } catch (e) { console.log("Roster error"); }
 }
 
-// Загрузка матчей
 async function updateMatches() {
     try {
         const response = await fetch('/api/matches');
@@ -130,9 +85,8 @@ async function updateMatches() {
 }
 
 updateRoster(); updateMatches();
-setInterval(updateMatches, 15000);
+setInterval(updateMatches, 20000);
 
-// Плавный скролл и появление
 function reveal() {
     let reveals = document.querySelectorAll(".reveal");
     for (let i = 0; i < reveals.length; i++) {
@@ -146,10 +100,7 @@ window.addEventListener("scroll", reveal); reveal();
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth' });
-            navLinks.classList.remove('active');
-        }
+        document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+        navLinks.classList.remove('active');
     });
 });

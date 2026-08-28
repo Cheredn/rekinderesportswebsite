@@ -1,0 +1,6 @@
+{
+  "name": "Rekinder eSports",
+  "description": "Official website for Rekinder eSports CS2 team with roster and match results",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

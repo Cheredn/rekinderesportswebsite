@@ -1,0 +1,281 @@
+import nodemailer from 'nodemailer';
+
+export const sentEmailsHistory = [];
+
+let testAccountTransporter = null;
+
+/**
+ * Creates and returns a nodemailer transporter based on environment variables or test account
+ */
+async function getTransporter() {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SMTP_PORT || '465', 10);
+  const secure = process.env.SMTP_SECURE === 'false' ? false : (port === 465);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  // If real credentials provided, use real SMTP
+  if (user && pass) {
+    return {
+      transporter: nodemailer.createTransport({
+        host,
+        port,
+        secure,
+        auth: { user, pass }
+      }),
+      isTest: false,
+      from: process.env.SMTP_FROM || `"Rekinder eSports" <${user}>`
+    };
+  }
+
+  // Fallback: Create test ethereal transporter for instant zero-config testing
+  if (!testAccountTransporter) {
+    try {
+      const testAccount = await nodemailer.createTestAccount();
+      testAccountTransporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass
+        }
+      });
+      console.log(`[Email Service] Created ethereal test mailbox: ${testAccount.user}`);
+    } catch (e) {
+      console.warn('[Email Service] Failed to create test account:', e.message);
+      return null;
+    }
+  }
+
+  return {
+    transporter: testAccountTransporter,
+    isTest: true,
+    from: '"Rekinder eSports" <noreply@rekinder-esports.com>'
+  };
+}
+
+/**
+ * Generate stylized HTML email wrapper with Rekinder eSports theme
+ */
+function generateEmailTemplate({ title, badge, badgeColor, content, booking }) {
+  const teamTitle = booking.team === 'junior' ? 'Rekinder eSports Junior' : 'Rekinder eSports (Main)';
+  
+  return `
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { margin: 0; padding: 0; background-color: #07080b; font-family: 'Montserrat', Arial, sans-serif; color: #e5e7eb; }
+    .email-container { max-width: 600px; margin: 20px auto; background: #0d0f14; border: 1px solid #222630; border-radius: 6px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+    .email-header { background: linear-gradient(135deg, #11141c 0%, #08090d 100%); padding: 30px 24px; border-bottom: 2px solid #ffbb00; text-align: center; }
+    .email-logo { font-size: 24px; font-weight: 900; letter-spacing: 2px; color: #ffffff; text-transform: uppercase; margin: 0; }
+    .email-logo span { color: #ffbb00; }
+    .email-badge { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 12px; border-radius: 3px; margin-top: 10px; background: ${badgeColor || '#ffbb00'}; color: #000000; }
+    .email-body { padding: 30px 24px; }
+    .email-title { font-size: 19px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 12px; }
+    .email-text { font-size: 14px; line-height: 1.6; color: #9ca3af; margin-bottom: 20px; }
+    .booking-card { background: #07080b; border: 1px solid #1f2430; border-radius: 4px; padding: 18px; margin-bottom: 24px; }
+    .booking-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #141720; font-size: 13px; }
+    .booking-row:last-child { border-bottom: none; }
+    .b-label { color: #6b7280; }
+    .b-value { color: #ffffff; font-weight: 700; text-align: right; }
+    .email-footer { background: #07080b; padding: 20px 24px; text-align: center; border-top: 1px solid #191c24; font-size: 12px; color: #6b7280; }
+    .email-footer a { color: #ffbb00; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="email-header">
+      <h1 class="email-logo">REKINDER <span>eSPORTS</span></h1>
+      <div class="email-badge">${badge}</div>
+    </div>
+    <div class="email-body">
+      <h2 class="email-title">${title}</h2>
+      <p class="email-text">${content}</p>
+      
+      <div class="booking-card">
+        <table width="100%" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 13px;">
+          <tr style="border-bottom: 1px solid #181c26;">
+            <td style="color: #6b7280;">Код заявки:</td>
+            <td align="right" style="color: #ffbb00; font-weight: bold; font-family: monospace;">#${booking.id}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #181c26;">
+            <td style="color: #6b7280;">Состав Rekinder:</td>
+            <td align="right" style="color: #ffffff; font-weight: bold;">${teamTitle}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #181c26;">
+            <td style="color: #6b7280;">Ваша команда:</td>
+            <td align="right" style="color: #ffffff; font-weight: bold;">${booking.opponentTeam}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #181c26;">
+            <td style="color: #6b7280;">Дата и Время:</td>
+            <td align="right" style="color: #ffffff; font-weight: bold;">${booking.date} в ${booking.time} (МСК)</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #181c26;">
+            <td style="color: #6b7280;">Формат:</td>
+            <td align="right" style="color: #ffffff; font-weight: bold;">${booking.format || 'BO3'}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #181c26;">
+            <td style="color: #6b7280;">Контакт в Telegram:</td>
+            <td align="right" style="color: #ffffff; font-weight: bold;">${booking.contact}</td>
+          </tr>
+          <tr>
+            <td style="color: #6b7280;">Текущий статус:</td>
+            <td align="right" style="color: ${booking.status === 'confirmed' ? '#22c55e' : (booking.status === 'declined' ? '#ef4444' : '#eab308')}; font-weight: 800;">
+              ${booking.status === 'confirmed' ? 'ПОДТВЕРЖДЕН' : (booking.status === 'declined' ? 'ОТКЛОНЕН' : 'НА РАССМОТРЕНИИ')}
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+      <p class="email-text" style="margin-bottom: 0;">
+        При возникновении вопросов вы всегда можете связаться с нашим менеджментом через Telegram: 
+        <a href="https://t.me/rekinder_manager" style="color:#ffbb00; text-decoration:none; font-weight:bold;">@rekinder_manager</a>.
+      </p>
+    </div>
+    <div class="email-footer">
+      © ${new Date().getFullYear()} Rekinder eSports Organization. Все права защищены.<br>
+      Официальный сайт: <a href="https://rekinder-esports.com">rekinder-esports.com</a>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+}
+
+/**
+ * Send email when booking is created
+ */
+export async function sendBookingReceivedEmail(booking) {
+  if (!booking.email) return false;
+
+  const mailConfig = await getTransporter();
+  if (!mailConfig) {
+    console.log(`[Email Service] Mail service unavailable. Skipped sending creation email to ${booking.email}`);
+    return false;
+  }
+
+  const { transporter, isTest, from } = mailConfig;
+
+  const subject = `⚡ Заявка на пракк #${booking.id} принята в обработку — Rekinder eSports`;
+  const html = generateEmailTemplate({
+    title: `Заявка на пракк #${booking.id} принята!`,
+    badge: 'ЗАЯВКА В ОБРАБОТКЕ',
+    badgeColor: '#eab308',
+    content: `Здравствуйте! Ваша заявка на проведение тренировочного матча (пракка) с <strong>${booking.opponentTeam}</strong> успешно получена и передана руководству команды <strong>Rekinder eSports</strong>. Мы рассмотрим её в ближайшее время и уведомим вас о решении.`,
+    booking
+  });
+
+  try {
+    const info = await transporter.sendMail({
+      from,
+      to: booking.email,
+      subject,
+      html
+    });
+
+    const previewUrl = isTest ? nodemailer.getTestMessageUrl(info) : null;
+    
+    const emailRecord = {
+      id: `EML-${Date.now()}-${Math.floor(Math.random()*1000)}`,
+      bookingId: booking.id,
+      to: booking.email,
+      subject,
+      html,
+      isTest,
+      previewUrl,
+      type: 'received',
+      sentAt: new Date().toISOString()
+    };
+    sentEmailsHistory.unshift(emailRecord);
+    if (sentEmailsHistory.length > 50) sentEmailsHistory.pop();
+
+    console.log(`[Email Service] Booking received email sent to ${booking.email}`);
+    if (previewUrl) {
+      console.log(`[Email Service] 🔗 Ethereal Live Preview URL: ${previewUrl}`);
+    }
+    return emailRecord;
+  } catch (err) {
+    console.error(`[Email Service] Failed to send creation email to ${booking.email}:`, err.message);
+    return false;
+  }
+}
+
+/**
+ * Send email when booking is confirmed or declined
+ */
+export async function sendBookingStatusUpdateEmail(booking) {
+  if (!booking.email) return false;
+
+  const isConfirmed = booking.status === 'confirmed';
+  const isDeclined = booking.status === 'declined';
+
+  if (!isConfirmed && !isDeclined) return false;
+
+  const mailConfig = await getTransporter();
+  if (!mailConfig) {
+    console.log(`[Email Service] Mail service unavailable. Skipped sending status email to ${booking.email}`);
+    return false;
+  }
+
+  const { transporter, isTest, from } = mailConfig;
+
+  const title = isConfirmed 
+    ? `Пракк #${booking.id} подтвержден! ✅` 
+    : `Заявка #${booking.id} отклонена ❌`;
+
+  const badge = isConfirmed ? 'ПРАКК ПОДТВЕРЖДЕН' : 'ЗАЯВКА ОТКЛОНЕНА';
+  const badgeColor = isConfirmed ? '#22c55e' : '#ef4444';
+
+  const content = isConfirmed
+    ? `Отличные новости! Руководство команды <strong>Rekinder eSports</strong> подтвердило пракк против вашей команды <strong>${booking.opponentTeam}</strong> на <strong>${booking.date} в ${booking.time} (МСК)</strong>. Наш менеджер свяжется с вами в Telegram для предоставления сервера/GOTV.`
+    : `К сожалению, наш состав не сможет сыграть пракк в указанное время (<strong>${booking.date} в ${booking.time} МСК</strong>) из-за плотного графика официальных матчей или занятости состава. Вы можете оставить заявку на другую дату на нашем сайте.`;
+
+  const html = generateEmailTemplate({
+    title,
+    badge,
+    badgeColor,
+    content,
+    booking
+  });
+
+  const subject = isConfirmed 
+    ? `✅ Пракк #${booking.id} ПОДТВЕРЖДЕН — Rekinder eSports vs ${booking.opponentTeam}`
+    : `❌ Обновление статуса по заявке #${booking.id} — Rekinder eSports`;
+
+  try {
+    const info = await transporter.sendMail({
+      from,
+      to: booking.email,
+      subject,
+      html
+    });
+
+    const previewUrl = isTest ? nodemailer.getTestMessageUrl(info) : null;
+
+    const emailRecord = {
+      id: `EML-${Date.now()}-${Math.floor(Math.random()*1000)}`,
+      bookingId: booking.id,
+      to: booking.email,
+      subject,
+      html,
+      isTest,
+      previewUrl,
+      type: booking.status,
+      sentAt: new Date().toISOString()
+    };
+    sentEmailsHistory.unshift(emailRecord);
+    if (sentEmailsHistory.length > 50) sentEmailsHistory.pop();
+
+    console.log(`[Email Service] Status update email sent to ${booking.email}`);
+    if (previewUrl) {
+      console.log(`[Email Service] 🔗 Ethereal Live Preview URL: ${previewUrl}`);
+    }
+    return emailRecord;
+  } catch (err) {
+    console.error(`[Email Service] Failed to send status update email to ${booking.email}:`, err.message);
+    return false;
+  }
+}

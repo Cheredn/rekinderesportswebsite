@@ -1,0 +1,7 @@
+[
+  { "opponent": "NAVI Junior", "score": "13:9", "status": "WIN", "opp_logo": "navi.png", "date": "2026-08-28" },
+  { "opponent": "Spirit Academy", "score": "13:11", "status": "WIN", "opp_logo": "spirit.png", "date": "2026-08-27" },
+  { "opponent": "MOUZ NXT", "score": "9:13", "status": "LOSS", "opp_logo": "mouz.png", "date": "2026-08-26" },
+  { "opponent": "Astralis Talent", "score": "13:7", "status": "WIN", "opp_logo": "astralis.png", "date": "2026-08-25" },
+  { "opponent": "BIG Academy", "score": "16:14", "status": "WIN", "opp_logo": "big.png", "date": "2026-08-24" }
+]

@@ -1,0 +1,12 @@
+[
+  { "nick": "AWESOME", "role": "Sniper", "photo": "awesome.png", "team": "main", "cap": 0 },
+  { "nick": "LASQUA", "role": "OpenFragger", "photo": "lasqua.png", "team": "main", "cap": 0 },
+  { "nick": "SHNYROQ", "role": "In-Game Leader", "photo": "shnyroq.png", "team": "main", "cap": 1 },
+  { "nick": "TAKUYA", "role": "Lurker", "photo": "takuya.png", "team": "main", "cap": 0 },
+  { "nick": "AIMIR666", "role": "Support", "photo": "aimir666.png", "team": "main", "cap": 0 },
+  { "nick": "MOTT1VV", "role": "Rifler", "photo": "mott1vv.png", "team": "junior", "cap": 0 },
+  { "nick": "SAL1CH", "role": "Sniper", "photo": "sal1ch.png", "team": "junior", "cap": 0 },
+  { "nick": "ST0RMIE", "role": "Entry", "photo": "st0rmie.png", "team": "junior", "cap": 0 },
+  { "nick": "UNKNOWN", "role": "Support", "photo": "logo.png", "team": "junior", "cap": 0 },
+  { "nick": "UNKNOWN", "role": "Lurker", "photo": "logo.png", "team": "junior", "cap": 0 }
+]

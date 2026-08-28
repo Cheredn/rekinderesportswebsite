@@ -1,0 +1,132 @@
+[
+  {
+    "id": "PRAC-6184",
+    "team": "junior",
+    "opponentTeam": "NAVI Junior",
+    "contact": "@navi_manager",
+    "email": "stascherednik11@gmail.com",
+    "date": "2026-09-10",
+    "time": "18:00",
+    "format": "BO3",
+    "teamLink": "",
+    "comment": "Test email in preview",
+    "teamLogo": "",
+    "status": "confirmed",
+    "createdAt": "2026-08-28T20:29:35.853Z",
+    "managerDecisionBy": "@V1MOREE",
+    "managerDecisionAt": "2026-08-28T20:29:39.692Z"
+  },
+  {
+    "id": "PRAC-5153",
+    "team": "main",
+    "opponentTeam": "MOUZ NXT",
+    "contact": "@mouz_lead",
+    "email": "opponent.manager@gmail.com",
+    "date": "2026-09-05",
+    "time": "20:00",
+    "format": "BO3",
+    "teamLink": "",
+    "comment": "Official pracc test",
+    "teamLogo": "",
+    "status": "confirmed",
+    "createdAt": "2026-08-28T20:12:33.370Z",
+    "managerDecisionBy": "@V1MOREE",
+    "managerDecisionAt": "2026-08-28T20:12:41.219Z"
+  },
+  {
+    "id": "PRAC-8079",
+    "team": "main",
+    "opponentTeam": "Virtus.pro Youth",
+    "contact": "@vp_manager",
+    "date": "2026-09-04",
+    "time": "19:00",
+    "format": "BO3",
+    "teamLink": "https://vk.com/vp_team",
+    "comment": "Сервер наш",
+    "teamLogo": "",
+    "status": "pending",
+    "createdAt": "2026-08-28T20:09:15.308Z"
+  },
+  {
+    "id": "PRAC-4553",
+    "team": "junior",
+    "opponentTeam": "Cloud9 Academy",
+    "contact": "@c9_manager",
+    "date": "2026-09-03",
+    "time": "19:00",
+    "format": "BO5",
+    "maps": [
+      "Mirage",
+      "Nuke",
+      "Ancient"
+    ],
+    "teamLink": "",
+    "comment": "Ready for 128 tick",
+    "teamLogo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+    "status": "pending",
+    "createdAt": "2026-08-28T20:05:24.517Z"
+  },
+  {
+    "id": "PRAC-2960",
+    "team": "junior",
+    "opponentTeam": "NAVI Junior",
+    "contact": "@navi_pracc",
+    "date": "2026-09-02",
+    "time": "18:00",
+    "format": "BO5",
+    "maps": [
+      "Mirage",
+      "Inferno",
+      "Nuke",
+      "Ancient",
+      "Anubis"
+    ],
+    "server": "Frankfurt / Pracc.com",
+    "teamLink": "",
+    "comment": "BO5 showmatch test",
+    "status": "pending",
+    "createdAt": "2026-08-28T20:05:20.108Z"
+  },
+  {
+    "id": "PRAC-4951",
+    "team": "junior",
+    "opponentTeam": "MOUZ NXT",
+    "contact": "@mouz_coach",
+    "date": "2026-08-31",
+    "time": "20:00",
+    "format": "BO2",
+    "maps": [
+      "Mirage",
+      "Nuke"
+    ],
+    "server": "Frankfurt (Pracc.com)",
+    "teamLink": "",
+    "comment": "CS2 128 tick",
+    "status": "confirmed",
+    "createdAt": "2026-08-28T19:58:12.828Z",
+    "managerDecisionBy": "@r3v0lt",
+    "managerDecisionAt": "2026-08-28T19:58:17.079Z"
+  },
+  {
+    "id": "PRAC-7201",
+    "team": "main",
+    "opponentTeam": "Spirit Academy",
+    "contact": "@spirit_manager",
+    "contactType": "telegram",
+    "date": "2026-08-30",
+    "time": "18:00",
+    "duration": "2 часа",
+    "format": "BO2",
+    "maps": [
+      "Mirage",
+      "Ancient"
+    ],
+    "server": "Frankfurt (Pracc.com)",
+    "teamLink": "https://faceit.com/teams/spirit-acad",
+    "comment": "Пракк 128 tick сервер готов",
+    "status": "confirmed",
+    "createdAt": "2026-08-28T19:58:09.253Z",
+    "managerDecisionBy": "V1MOREE",
+    "managerDecisionAt": "2026-08-28T19:58:09.253Z"
+  }
+]

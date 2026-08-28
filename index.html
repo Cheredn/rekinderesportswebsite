@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Rekinder eSports | Official Site</title>
+    <meta name="description" content="Official website for Rekinder eSports CS2 team with roster and match results">
+    <meta property="og:title" content="Rekinder eSports">
+    <meta property="og:description" content="Official website for Rekinder eSports CS2 team with roster and match results">
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -28,6 +31,7 @@
                 <li><a href="#staff">Руководство</a></li>
                 <li><a href="#roster">Состав</a></li>
                 <li><a href="#matches">Матчи</a></li>
+                <li><a href="#booking-modal" id="nav-booking-btn" class="nav-booking-link"><i class="fa-solid fa-calendar-check"></i> Пракки</a></li>
                 <li><a href="https://t.me/rekinder_manager" target="_blank" class="btn-join">Связаться</a></li>
             </ul>
         </nav>
@@ -42,7 +46,22 @@
                 <div class="hero-btns">
                     <a href="#roster" class="btn-primary" id="btn-hero-roster">Узнать состав</a>
                     <a href="#matches" class="btn-secondary" id="btn-hero-matches">Последние игры</a>
-                    <a href="https://dovstrechiapp.ru/?startapp=s_5qtwfmm" target="_blank" rel="noopener noreferrer" class="btn-booking" id="btn-hero-booking"><i class="fa-solid fa-gamepad"></i> Забронировать игру</a>
+                    <div class="booking-split-container" id="booking-split-container">
+                        <div class="booking-initial-btn" id="btn-hero-booking">
+                            <i class="fa-solid fa-gamepad"></i>
+                            <span>Забронировать игру</span>
+                        </div>
+                        <div class="booking-options">
+                            <button type="button" class="booking-sub-btn btn-booking-main" id="btn-booking-main" data-team="main">
+                                <i class="fa-solid fa-shield"></i>
+                                <span>Rekinder Main</span>
+                            </button>
+                            <button type="button" class="booking-sub-btn btn-booking-junior" id="btn-booking-junior" data-team="junior">
+                                <i class="fa-solid fa-star"></i>
+                                <span>Rekinder Junior</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -72,6 +91,199 @@
             <h2 class="section-title reveal"><span>Последние</span> Результаты</h2>
             <div id="matches-loader"></div>
         </section>
+
+        <!-- PRACC / SCRIM BOOKING SECTION (IN-PAGE OR MODAL) -->
+        <div id="scrim-modal" class="scrim-modal" aria-hidden="true">
+            <div class="scrim-modal-overlay" id="scrim-modal-overlay"></div>
+            <div class="scrim-modal-container">
+                <div class="scrim-modal-header">
+                    <div class="scrim-header-info">
+                        <span class="scrim-badge"><i class="fa-solid fa-crosshairs"></i> CS2 SCRIM SYSTEM</span>
+                        <h2>Бронирование <span>Пракка</span></h2>
+                        <p>Выберите дату и время для тренировочной игры (Pracc) против составов Rekinder eSports</p>
+                    </div>
+                    <button type="button" class="scrim-close-btn" id="scrim-modal-close" aria-label="Закрыть">&times;</button>
+                </div>
+
+                <!-- Modal Tabs -->
+                <div class="scrim-nav-tabs">
+                    <button type="button" class="scrim-tab-btn active" id="tab-btn-form">
+                        <i class="fa-solid fa-calendar-plus"></i> Новая заявка
+                    </button>
+                    <button type="button" class="scrim-tab-btn" id="tab-btn-schedule">
+                        <i class="fa-solid fa-list-check"></i> Расписание & Статус
+                    </button>
+                </div>
+
+                <!-- TAB 1: BOOKING FORM WITH CALENDAR -->
+                <div class="scrim-tab-content active" id="scrim-tab-form">
+                    <!-- Team Selector -->
+                    <div class="scrim-team-picker">
+                        <label class="scrim-team-card active" data-team="main" id="team-card-main">
+                            <input type="radio" name="target_team" value="main" checked>
+                            <div class="team-card-inner">
+                                <div class="team-card-badge">MAIN ROSTER</div>
+                                <h4>Rekinder eSports</h4>
+                            </div>
+                        </label>
+                        <label class="scrim-team-card" data-team="junior" id="team-card-junior">
+                            <input type="radio" name="target_team" value="junior">
+                            <div class="team-card-inner">
+                                <div class="team-card-badge junior">JUNIOR ROSTER</div>
+                                <h4>Rekinder Junior <span class="junior-gold">CS2</span></h4>
+                            </div>
+                        </label>
+                    </div>
+
+                    <form id="scrim-booking-form" class="scrim-form-grid">
+                        <!-- Left Column: Calendar & Time -->
+                        <div class="scrim-col-calendar">
+                            <div class="calendar-wrapper">
+                                <div class="calendar-header">
+                                    <button type="button" class="cal-nav-btn" id="cal-prev-month" aria-label="Предыдущий месяц"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <h4 id="cal-month-title">Март 2026</h4>
+                                    <button type="button" class="cal-nav-btn" id="cal-next-month" aria-label="Следующий месяц"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                                <div class="calendar-weekdays">
+                                    <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+                                </div>
+                                <div class="calendar-days-grid" id="calendar-days-grid">
+                                    <!-- Populated by script.js -->
+                                </div>
+                            </div>
+
+                            <div class="time-picker-block">
+                                <label><i class="fa-regular fa-clock"></i> Выберите время (МСК):</label>
+                                <div class="time-slots-grid" id="time-slots-grid">
+                                    <button type="button" class="time-slot-btn" data-time="14:00">14:00</button>
+                                    <button type="button" class="time-slot-btn" data-time="16:00">16:00</button>
+                                    <button type="button" class="time-slot-btn active" data-time="18:00">18:00</button>
+                                    <button type="button" class="time-slot-btn" data-time="20:00">20:00</button>
+                                    <button type="button" class="time-slot-btn" data-time="22:00">22:00</button>
+                                    <button type="button" class="time-slot-btn" data-time="custom">Свое</button>
+                                </div>
+                                <input type="time" id="scrim-custom-time" class="scrim-input hidden" style="margin-top: 8px;">
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Opponent Details -->
+                        <div class="scrim-col-details">
+                            <div class="form-group">
+                                <label for="scrim-opponent-team"><i class="fa-solid fa-shield-halved"></i> Название вашей команды *</label>
+                                <input type="text" id="scrim-opponent-team" class="scrim-input" placeholder="Например: Team Spirit Academy, MOUZ NXT..." required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scrim-contact"><i class="fa-brands fa-telegram"></i> Контакт менеджера / капитана (Telegram) *</label>
+                                <input type="text" id="scrim-contact" class="scrim-input" placeholder="@manager_tg" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scrim-email"><i class="fa-solid fa-envelope"></i> Email для уведомлений и статуса заявки</label>
+                                <input type="email" id="scrim-email" class="scrim-input" placeholder="team.manager@gmail.com">
+                            </div>
+
+                            <!-- Team Logo / Photo Upload Zone -->
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-image"></i> Фото / Логотип вашей команды (необязательно)</label>
+                                <div class="team-logo-upload-zone" id="team-logo-zone">
+                                    <input type="file" id="scrim-team-logo-input" accept="image/*" class="hidden">
+                                    <div class="upload-placeholder" id="logo-placeholder">
+                                        <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                                        <div class="upload-text">
+                                            <span>Нажмите или перетащите логотип команды</span>
+                                            <small>PNG, JPG, WEBP (до 5 МБ)</small>
+                                        </div>
+                                    </div>
+                                    <div class="logo-preview-box hidden" id="logo-preview-box">
+                                        <img id="logo-preview-img" src="" alt="Логотип команды">
+                                        <div class="logo-preview-info">
+                                            <span id="logo-file-name">team_logo.png</span>
+                                            <span class="logo-status-tag"><i class="fa-solid fa-check"></i> Загружено</span>
+                                        </div>
+                                        <button type="button" class="btn-remove-logo" id="btn-remove-logo" title="Удалить фото">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scrim-format"><i class="fa-solid fa-gamepad"></i> Формат игры</label>
+                                <select id="scrim-format" class="scrim-input">
+                                    <option value="BO1">BO1 (1 Карта)</option>
+                                    <option value="BO3" selected>BO3 (3 Карты)</option>
+                                    <option value="BO5">BO5 (5 Карт / Full Series)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scrim-team-link"><i class="fa-solid fa-link"></i> Ссылка на команду (Faceit / HLTV / Telegram / VK / соцсети)</label>
+                                <input type="url" id="scrim-team-link" class="scrim-input" placeholder="https://faceit.com/... или https://t.me/...">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scrim-comment"><i class="fa-regular fa-comment-dots"></i> Дополнительные пожелания</label>
+                                <input type="text" id="scrim-comment" class="scrim-input" placeholder="128 tick, разминка 15 минут, запись демо...">
+                            </div>
+
+                            <!-- Bot Sync Indicator Banner -->
+                            <div class="telegram-sync-badge">
+                                <i class="fa-brands fa-telegram"></i>
+                                <div>
+                                    <strong>Мгновенное уведомление в Telegram:</strong>
+                                    <span>Заявка сразу отправляется руководству команды с кнопками принятия/отклонения</span>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn-submit-booking" id="btn-submit-booking">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                    <span>Отправить заявку на пракк</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Success State Screen (Hidden initially) -->
+                    <div id="scrim-success-view" class="scrim-success-view hidden">
+                        <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        <h3>Заявка успешно отправлена!</h3>
+                        <p>Ваш запрос на пракк передан менеджерам <strong>Rekinder eSports</strong> в Telegram.</p>
+                        
+                        <div class="booking-summary-card" id="booking-summary-card">
+                            <!-- Populated after submit -->
+                        </div>
+
+                        <div class="success-actions">
+                            <button type="button" class="btn-primary" id="btn-success-new">Забронировать еще</button>
+                            <a href="https://t.me/rekinder_manager" target="_blank" class="btn-secondary"><i class="fa-brands fa-telegram"></i> Менеджер в TG</a>
+                            <button type="button" class="btn-text" id="btn-success-close">Закрыть окно</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: SCHEDULE & STATUS TRACKER -->
+                <div class="scrim-tab-content" id="scrim-tab-schedule">
+                    <div class="schedule-controls">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="schedule-search-input" placeholder="Поиск по ID (#PRAC-...) или названию команды...">
+                        </div>
+                        <div class="filter-team-group">
+                            <button type="button" class="filter-btn active" data-filter-team="all">Все составы</button>
+                            <button type="button" class="filter-btn" data-filter-team="main">Main Roster</button>
+                            <button type="button" class="filter-btn" data-filter-team="junior">Junior</button>
+                        </div>
+                    </div>
+
+                    <div class="schedule-list" id="schedule-list">
+                        <!-- Loaded dynamically from /api/bookings -->
+                        <div class="schedule-loader"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка расписания пракков...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <footer>

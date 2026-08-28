@@ -20,31 +20,9 @@ function loadBookings() {
   try {
     if (fs.existsSync(BOOKINGS_FILE)) {
       const data = fs.readFileSync(BOOKINGS_FILE, 'utf-8');
-      bookings = JSON.parse(data);
+      bookings = JSON.parse(data || '[]');
     } else {
-      const today = new Date();
-      const nextDate = new Date(today.getTime() + 86400000 * 2).toISOString().split('T')[0];
-      bookings = [
-        {
-          id: 'PRAC-7201',
-          team: 'main',
-          opponentTeam: 'Spirit Academy',
-          contact: '@spirit_manager',
-          contactType: 'telegram',
-          date: nextDate,
-          time: '18:00',
-          duration: '2 часа',
-          format: 'BO2',
-          maps: ['Mirage', 'Ancient'],
-          server: 'Frankfurt (Pracc.com)',
-          teamLink: 'https://faceit.com/teams/spirit-acad',
-          comment: 'Пракк 128 tick сервер готов',
-          status: 'confirmed',
-          createdAt: new Date().toISOString(),
-          managerDecisionBy: 'V1MOREE',
-          managerDecisionAt: new Date().toISOString()
-        }
-      ];
+      bookings = [];
       saveBookings();
     }
   } catch (err) {
@@ -65,7 +43,7 @@ function loadBlockedDates() {
   try {
     if (fs.existsSync(BLOCKED_DATES_FILE)) {
       const data = fs.readFileSync(BLOCKED_DATES_FILE, 'utf-8');
-      blockedDates = JSON.parse(data);
+      blockedDates = JSON.parse(data || '[]');
     } else {
       blockedDates = [];
       saveBlockedDates();
@@ -88,20 +66,9 @@ function loadPlayers() {
   try {
     if (fs.existsSync(PLAYERS_FILE)) {
       const data = fs.readFileSync(PLAYERS_FILE, 'utf-8');
-      players = JSON.parse(data);
+      players = JSON.parse(data || '[]');
     } else {
-      players = [
-        { nick: 'AWESOME', role: 'Sniper', photo: 'awesome.png', team: 'main', cap: 0 },
-        { nick: 'LASQUA', role: 'OpenFragger', photo: 'lasqua.png', team: 'main', cap: 0 },
-        { nick: 'SHNYROQ', role: 'In-Game Leader', photo: 'shnyroq.png', team: 'main', cap: 1 },
-        { nick: 'TAKUYA', role: 'Lurker', photo: 'takuya.png', team: 'main', cap: 0 },
-        { nick: 'AIMIR666', role: 'Support', photo: 'aimir666.png', team: 'main', cap: 0 },
-        { nick: 'MOTT1VV', role: 'Rifler', photo: 'mott1vv.png', team: 'junior', cap: 0 },
-        { nick: 'SAL1CH', role: 'Sniper', photo: 'sal1ch.png', team: 'junior', cap: 0 },
-        { nick: 'ST0RMIE', role: 'Entry', photo: 'st0rmie.png', team: 'junior', cap: 0 },
-        { nick: 'UNKNOWN', role: 'Support', photo: 'logo.png', team: 'junior', cap: 0 },
-        { nick: 'UNKNOWN', role: 'Lurker', photo: 'logo.png', team: 'junior', cap: 0 }
-      ];
+      players = [];
       savePlayers();
     }
   } catch (err) {
@@ -122,15 +89,9 @@ function loadMatches() {
   try {
     if (fs.existsSync(MATCHES_FILE)) {
       const data = fs.readFileSync(MATCHES_FILE, 'utf-8');
-      matches = JSON.parse(data);
+      matches = JSON.parse(data || '[]');
     } else {
-      matches = [
-        { opponent: 'NAVI Junior', score: '13:9', status: 'WIN', opp_logo: 'navi.png', date: '2026-08-28' },
-        { opponent: 'Spirit Academy', score: '13:11', status: 'WIN', opp_logo: 'spirit.png', date: '2026-08-27' },
-        { opponent: 'MOUZ NXT', score: '9:13', status: 'LOSS', opp_logo: 'mouz.png', date: '2026-08-26' },
-        { opponent: 'Astralis Talent', score: '13:7', status: 'WIN', opp_logo: 'astralis.png', date: '2026-08-25' },
-        { opponent: 'BIG Academy', score: '16:14', status: 'WIN', opp_logo: 'big.png', date: '2026-08-24' }
-      ];
+      matches = [];
       saveMatches();
     }
   } catch (err) {
@@ -186,15 +147,22 @@ class TelegramBotService {
   async sendApiRequest(method, payload = {}) {
     if (!this.isConfigured()) return null;
     const url = `https://api.telegram.org/bot${this.token}/${method}`;
+    // If long-polling with timeout parameter, allow enough HTTP timeout (e.g. 20s poll timeout + 10s grace)
+    const reqTimeout = (method === 'getUpdates' && payload.timeout) ? (payload.timeout + 10) * 1000 : 10000;
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(reqTimeout)
       });
       const data = await response.json();
       return data;
     } catch (err) {
+      if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+        // Normal in long polling when no updates occurred during the poll window
+        return null;
+      }
       console.error(`Telegram API error [${method}]:`, err.message);
       return null;
     }
@@ -207,30 +175,33 @@ class TelegramBotService {
                         booking.status === 'declined' ? '❌ ОТКЛОНЕН' : '⏳ В ОЖИДАНИИ';
 
     const cleanContact = (booking.contact || '').replace(/^@/, '');
-    const tgLink = booking.contact ? `https://t.me/${cleanContact}` : null;
+    const tgLink = booking.contact ? `https://t.me/${encodeURIComponent(cleanContact)}` : null;
+
+    // Helper to sanitize markdown
+    const esc = (str) => (str || '').replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
 
     let text = `🎮 *ЗАЯВКА НА ПРАКК (SCRIM) #${booking.id}*\n\n`;
     text += `🛡️ *Команда Rekinder:* ${teamTitle}\n`;
-    text += `⚔️ *Противник:* ${booking.opponentTeam}\n`;
+    text += `⚔️ *Противник:* ${esc(booking.opponentTeam)}\n`;
     text += `📅 *Дата:* ${booking.date}\n`;
     text += `⏰ *Время:* ${booking.time} (МСК)\n`;
-    text += `🗺️ *Формат:* ${booking.format || 'BO3'}\n`;
-    text += `👤 *Контакт (Telegram):* ${booking.contact}\n`;
+    text += `🗺️ *Формат:* ${esc(booking.format || 'BO3')}\n`;
+    text += `👤 *Контакт:* ${esc(booking.contact)}\n`;
     if (booking.email) {
-      text += `📧 *Email:* ${booking.email}\n`;
+      text += `📧 *Email:* ${esc(booking.email)}\n`;
     }
     if (booking.teamLogo) {
-      text += `🖼️ *Логотип команды:* Прикреплен к заявке на сайте\n`;
+      text += `🖼️ *Логотип:* Прикреплен к заявке на сайте\n`;
     }
     if (booking.teamLink) {
       text += `🔗 *Ссылка на команду:* ${booking.teamLink}\n`;
     }
     if (booking.comment) {
-      text += `💬 *Комментарий:* _${booking.comment}_\n`;
+      text += `💬 *Комментарий:* _${esc(booking.comment)}_\n`;
     }
     text += `\n📌 *Статус:* ${statusEmoji}\n`;
     if (booking.managerDecisionBy) {
-      text += `⚡ *Решение:* ${booking.managerDecisionBy} (${new Date(booking.managerDecisionAt || Date.now()).toLocaleTimeString('ru-RU')})\n`;
+      text += `⚡ *Решение:* ${esc(booking.managerDecisionBy)} (${new Date(booking.managerDecisionAt || Date.now()).toLocaleTimeString('ru-RU')})\n`;
     }
 
     return { text, tgLink };

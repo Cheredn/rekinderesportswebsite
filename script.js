@@ -95,19 +95,43 @@ async function updateRoster() {
         const mainGrid = document.getElementById('main-roster-grid');
         const juniorGrid = document.getElementById('junior-roster-grid');
         mainGrid.innerHTML = ''; juniorGrid.innerHTML = '';
-        players.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'player-card reveal active';
-            card.innerHTML = `
-                <div class="player-img"><img src="${p.photo}" onerror="this.src='logo.png'"></div>
-                <div class="player-info">
-                    ${p.cap ? '<div class="player-tag">CAPTAIN</div>' : ''}
-                    <h3>${p.nick}</h3>
-                    <p>${p.role}</p>
-                </div>`;
-            if (p.team === 'main') mainGrid.appendChild(card);
-            else juniorGrid.appendChild(card);
-        });
+
+        const mainPlayers = players.filter(p => p.team === 'main');
+        const juniorPlayers = players.filter(p => p.team === 'junior');
+
+        if (mainPlayers.length === 0) {
+            mainGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #6b7280; padding: 24px 12px; font-size: 0.95rem; border: 1px dashed #27272a; border-radius: 4px;">Состав формируется. Игроки могут быть добавлены через Telegram бота.</div>';
+        } else {
+            mainPlayers.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'player-card reveal active';
+                card.innerHTML = `
+                    <div class="player-img"><img src="${p.photo}" onerror="this.src='logo.png'"></div>
+                    <div class="player-info">
+                        ${p.cap ? '<div class="player-tag">CAPTAIN</div>' : ''}
+                        <h3>${p.nick}</h3>
+                        <p>${p.role}</p>
+                    </div>`;
+                mainGrid.appendChild(card);
+            });
+        }
+
+        if (juniorPlayers.length === 0) {
+            juniorGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #6b7280; padding: 24px 12px; font-size: 0.95rem; border: 1px dashed #27272a; border-radius: 4px;">Состав формируется. Игроки могут быть добавлены через Telegram бота.</div>';
+        } else {
+            juniorPlayers.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'player-card reveal active';
+                card.innerHTML = `
+                    <div class="player-img"><img src="${p.photo}" onerror="this.src='logo.png'"></div>
+                    <div class="player-info">
+                        ${p.cap ? '<div class="player-tag">CAPTAIN</div>' : ''}
+                        <h3>${p.nick}</h3>
+                        <p>${p.role}</p>
+                    </div>`;
+                juniorGrid.appendChild(card);
+            });
+        }
     } catch (e) { console.log("Roster error"); }
 }
 
@@ -118,6 +142,12 @@ async function updateMatches() {
         const matches = await response.json();
         const loader = document.getElementById('matches-loader');
         loader.innerHTML = ''; 
+
+        if (matches.length === 0) {
+            loader.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #6b7280; padding: 32px 12px; font-size: 0.95rem; border: 1px dashed #27272a; border-radius: 4px;">Матчи еще не внесены в базу. Добавьте сыгранные игры через Telegram бота.</div>';
+            return;
+        }
+
         matches.forEach((m, index) => {
             const card = document.createElement('div');
             const accent = (index === 0) ? 'is-latest' : 'is-old';
@@ -125,7 +155,7 @@ async function updateMatches() {
             card.innerHTML = `
                 <div class="match-team"><img src="logo.png" class="match-team-logo"><div class="team-name">REKINDER</div></div>
                 <div class="score">${m.score}</div>
-                <div class="match-team right"><img src="/opponents/${m.opp_logo}" class="match-team-logo"><div class="opponent">${m.opponent}</div></div>
+                <div class="match-team right"><img src="/opponents/${m.opp_logo}" onerror="this.src='logo.png'" class="match-team-logo"><div class="opponent">${m.opponent}</div></div>
                 <div class="match-status">${m.status}</div>`;
             loader.appendChild(card);
         });
@@ -482,8 +512,8 @@ function processImageFile(file) {
         alert('Пожалуйста, выберите файл изображения (PNG, JPG, WEBP).');
         return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-        alert('Размер файла не должен превышать 5 МБ.');
+    if (file.size > 10 * 1024 * 1024) {
+        alert('Размер файла не должен превышать 10 МБ.');
         return;
     }
 
@@ -491,8 +521,8 @@ function processImageFile(file) {
     reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-            // Optional scale down if massive
-            const maxDim = 800;
+            // Scale down logo to max 400px for optimal transfer speed
+            const maxDim = 400;
             let width = img.width;
             let height = img.height;
             if (width > maxDim || height > maxDim) {
@@ -511,7 +541,8 @@ function processImageFile(file) {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            uploadedTeamLogoBase64 = canvas.toDataURL('image/png', 0.9);
+            // Compress to standard compact PNG/JPEG
+            uploadedTeamLogoBase64 = canvas.toDataURL('image/png', 0.85);
 
             if (logoPreviewImg) logoPreviewImg.src = uploadedTeamLogoBase64;
             if (logoFileName) logoFileName.textContent = file.name;
@@ -580,6 +611,11 @@ if (scrimForm) {
         const teamLink = document.getElementById('scrim-team-link')?.value?.trim() || '';
         const comment = document.getElementById('scrim-comment')?.value?.trim() || '';
 
+        if (!opponentTeam || !contact) {
+            alert('Пожалуйста, укажите название вашей команды и контакт в Telegram');
+            return;
+        }
+
         const payload = {
             team: selectedTeam,
             opponentTeam,
@@ -605,7 +641,14 @@ if (scrimForm) {
                 body: JSON.stringify(payload)
             });
 
-            const data = await res.json();
+            const text = await res.text();
+            let data = {};
+            try {
+                data = JSON.parse(text);
+            } catch (pErr) {
+                console.warn('Response was not JSON:', text);
+                data = { error: `Ошибка сервера (${res.status})` };
+            }
 
             if (res.ok && data.success) {
                 const b = data.booking;
@@ -657,11 +700,11 @@ if (scrimForm) {
                 // Reload bookings
                 loadScheduleData();
             } else {
-                alert(data.error || 'Ошибка при отправке заявки');
+                alert(data.error || 'Ошибка при отправке заявки на пракк.');
             }
         } catch (err) {
             console.error('Booking error:', err);
-            alert('Произошла сетевая ошибка при связи с сервером.');
+            alert('Произошла сетевая ошибка при связи с сервером. Пожалуйста, проверьте подключение.');
         } finally {
             if (btnSubmitBooking) {
                 btnSubmitBooking.disabled = false;

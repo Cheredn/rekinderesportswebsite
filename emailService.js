@@ -241,15 +241,84 @@ function generateEmailTemplate({ title, badge, badgeColor, content, booking }) {
 }
 
 /**
+ * Helper to send email via modern HTTP REST APIs (Resend, Brevo) over port 443 (never blocked by Render)
+ */
+async function sendViaHttpApi({ to, subject, html }) {
+  // 1. Resend API (Free 3,000 emails/month, 100% inbox delivery)
+  if (process.env.RESEND_API_KEY) {
+    const from = process.env.RESEND_FROM || process.env.SMTP_FROM || 'Rekinder eSports <onboarding@resend.dev>';
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY.trim()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject,
+        html
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Resend API error (${response.status}): ${errText}`);
+    }
+
+    const data = await response.json();
+    return { id: data.id, provider: 'Resend' };
+  }
+
+  // 2. Brevo API (Free 300 emails/day, can send from any registered email like rekinderesportsteam@gmail.com)
+  if (process.env.BREVO_API_KEY) {
+    const senderEmail = process.env.BREVO_SENDER || process.env.SMTP_USER || 'rekinderesportsteam@gmail.com';
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': process.env.BREVO_API_KEY.trim(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: { name: 'Rekinder eSports', email: senderEmail },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Brevo API error (${response.status}): ${errText}`);
+    }
+
+    const data = await response.json();
+    return { id: data.messageId, provider: 'Brevo' };
+  }
+
+  return null;
+}
+
+/**
  * Helper to reliably send mail with automatic IPv4 and port fallback
  */
 async function sendMailSafely(mailConfig, mailOptions) {
+  // First check if an HTTP API is configured (Bypasses all cloud port restrictions)
+  try {
+    const httpResult = await sendViaHttpApi(mailOptions);
+    if (httpResult) {
+      return { info: { messageId: httpResult.id }, isTest: false, provider: httpResult.provider };
+    }
+  } catch (httpErr) {
+    console.error(`[Email Service] HTTP API send failed: ${httpErr.message}. Attempting SMTP fallback...`);
+  }
+
   const { transporter, isTest, from } = mailConfig;
   const fullOptions = { from, ...mailOptions };
 
   try {
     const info = await transporter.sendMail(fullOptions);
-    return { info, isTest };
+    return { info, isTest, provider: 'SMTP' };
   } catch (primaryErr) {
     if (!isTest && process.env.SMTP_USER && process.env.SMTP_PASS) {
       console.warn(`[Email Service] Primary SMTP send failed (${primaryErr.message}). Retrying via Gmail port 587 STARTTLS (IPv4)...`);
@@ -274,7 +343,7 @@ async function sendMailSafely(mailConfig, mailOptions) {
         });
         const info = await fallbackTransporter.sendMail(fullOptions);
         realTransporter = fallbackTransporter;
-        return { info, isTest: false };
+        return { info, isTest: false, provider: 'SMTP-Port587' };
       } catch (fallbackErr) {
         console.error(`[Email Service] Port 587 fallback also failed: ${fallbackErr.message}`);
         throw fallbackErr;

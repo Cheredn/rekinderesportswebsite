@@ -259,12 +259,472 @@ class TelegramBotService {
       ],
       [
         { text: '📊 Статус системы', callback_data: 'menu:status' },
-        { text: '💾 Получить БД', callback_data: 'menu:get_db' }
+        { text: '💾 Экспорт БД', callback_data: 'menu:get_db' }
       ],
       [
         { text: '🔄 Обновить меню', callback_data: 'menu:main' }
       ]
     ];
+  }
+
+  // Modern persistent bottom Reply Keyboard (replaces old bottom keyboards)
+  getReplyKeyboard() {
+    return {
+      keyboard: [
+        [{ text: '⏳ Ожидающие заявки' }, { text: '📋 Все пракки' }],
+        [{ text: '🔒 Закрыть день' }, { text: '🔓 Закрытые дни' }],
+        [{ text: '⚔️ Матчи и Игры' }, { text: '👥 Составы и Игроки' }],
+        [{ text: '📊 Статус системы' }, { text: '💾 Экспорт БД' }]
+      ],
+      resize_keyboard: true,
+      is_persistent: true
+    };
+  }
+
+  // Render Main Menu (supports both inline edit and new message)
+  async renderMainMenu(chatId, messageId = null, fromUser = 'Менеджер', sendReplyKeyboard = false) {
+    const text = `👋 Привет, *${fromUser}*!\n\n` +
+      `🎮 *Панель управления Rekinder eSports*\n\n` +
+      `Выберите нужное действие кнопками в сообщении или используйте нижнюю клавиатуру:\n` +
+      `• ⏳ *Ожидающие заявки* — просмотр и подтверждение\n` +
+      `• 📋 *Все пракки* — расписание и статус\n` +
+      `• 🔒 *Закрыть день* — календарь на 14 дней в 1 клик\n` +
+      `• 🔓 *Закрытые дни* — управление заблокированными датами\n` +
+      `• ⚔️ *Матчи и Игры* — результаты, W/L статистика\n` +
+      `• 👥 *Составы* — Main & Junior ростеры и капитаны\n` +
+      `• 💾 *Экспорт БД* — мгновенная выгрузка базы данных в чат`;
+
+    if (sendReplyKeyboard) {
+      // Send keyboard sync message first to guarantee bottom bar update
+      await this.sendApiRequest('sendMessage', {
+        chat_id: chatId,
+        text: '⌨️ *Клавиатура управления обновлена!*',
+        parse_mode: 'Markdown',
+        reply_markup: this.getReplyKeyboard()
+      });
+    }
+
+    if (messageId) {
+      await this.sendApiRequest('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: text,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: this.getMainMenuKeyboard() }
+      });
+    } else {
+      await this.sendApiRequest('sendMessage', {
+        chat_id: chatId,
+        text: text,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: this.getMainMenuKeyboard() }
+      });
+    }
+  }
+
+  // Render Pending Bookings
+  async renderPendingBookings(chatId, messageId = null) {
+    const pending = bookings.filter(b => b.status === 'pending');
+    if (pending.length === 0) {
+      const emptyText = '✨ *Ожидающих заявок нет!* Все пракки обработаны.';
+      const keyboard = [[{ text: '🔙 Назад в меню', callback_data: 'menu:main' }]];
+      if (messageId) {
+        await this.sendApiRequest('editMessageText', {
+          chat_id: chatId,
+          message_id: messageId,
+          text: emptyText,
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: keyboard }
+        });
+      } else {
+        await this.sendApiRequest('sendMessage', {
+          chat_id: chatId,
+          text: emptyText,
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: keyboard }
+        });
+      }
+      return;
+    }
+
+    let resp = `⏳ *Ожидающие заявки на пракк (${pending.length}):*\n\n`;
+    const keyboard = [];
+
+    pending.forEach((b, idx) => {
+      resp += `${idx + 1}. *#${b.id}* — ${b.opponentTeam} vs ${b.team.toUpperCase()}\n`;
+      resp += `   📅 ${b.date} в ${b.time} (МСК) | ${b.format || 'BO3'}\n`;
+      resp += `   👤 Контакт: ${b.contact}\n\n`;
+
+      keyboard.push([
+        { text: `✅ #${b.id}`, callback_data: `confirm:${b.id}` },
+        { text: `❌ #${b.id}`, callback_data: `decline:${b.id}` },
+        { text: `🗑️ #${b.id}`, callback_data: `delete:${b.id}` }
+      ]);
+    });
+
+    keyboard.push([{ text: '🔙 Назад в меню', callback_data: 'menu:main' }]);
+
+    if (messageId) {
+      await this.sendApiRequest('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    } else {
+      await this.sendApiRequest('sendMessage', {
+        chat_id: chatId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    }
+  }
+
+  // Render All Bookings
+  async renderAllBookings(chatId, messageId = null) {
+    const list = bookings.slice(0, 8);
+    if (list.length === 0) {
+      const emptyText = 'ℹ️ Список заявок пока пуст.';
+      const keyboard = [[{ text: '🔙 Назад в меню', callback_data: 'menu:main' }]];
+      if (messageId) {
+        await this.sendApiRequest('editMessageText', {
+          chat_id: chatId,
+          message_id: messageId,
+          text: emptyText,
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: keyboard }
+        });
+      } else {
+        await this.sendApiRequest('sendMessage', {
+          chat_id: chatId,
+          text: emptyText,
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: keyboard }
+        });
+      }
+      return;
+    }
+
+    let resp = `📋 *Последние заявки на пракки (${list.length}):*\n\n`;
+    const keyboard = [];
+
+    list.forEach((b, idx) => {
+      const statusIcon = b.status === 'confirmed' ? '✅' : b.status === 'declined' ? '❌' : '⏳';
+      resp += `${statusIcon} *#${b.id}* | ${b.date} ${b.time}\n`;
+      resp += `   ⚔️ ${b.opponentTeam} vs ${b.team.toUpperCase()} (${b.contact})\n\n`;
+
+      keyboard.push([
+        { text: `${b.status === 'confirmed' ? '❌ Отклонить' : '✅ Принять'} #${b.id}`, callback_data: `${b.status === 'confirmed' ? 'decline' : 'confirm'}:${b.id}` },
+        { text: `🗑️ Удалить`, callback_data: `delete:${b.id}` }
+      ]);
+    });
+
+    keyboard.push([{ text: '🔙 Назад в меню', callback_data: 'menu:main' }]);
+
+    if (messageId) {
+      await this.sendApiRequest('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    } else {
+      await this.sendApiRequest('sendMessage', {
+        chat_id: chatId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    }
+  }
+
+  // Render Date Picker
+  async renderDatePicker(chatId, messageId = null, team = 'all') {
+    const text = `🔒 *Закрытие дат для пракков:*\n\n` +
+      `Нажмите на нужную дату, чтобы *закрыть* 🔴 (или *открыть* 🟢) её в календаре для состава:\n` +
+      `👉 *${team === 'all' ? 'Все составы' : team === 'main' ? 'Main Roster' : 'Junior Roster'}*\n\n` +
+      `🟢 = день открыт для записи\n🔴 = день закрыт (занято)`;
+
+    if (messageId) {
+      await this.sendApiRequest('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: text,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: this.getDatePickerKeyboard(team) }
+      });
+    } else {
+      await this.sendApiRequest('sendMessage', {
+        chat_id: chatId,
+        text: text,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: this.getDatePickerKeyboard(team) }
+      });
+    }
+  }
+
+  // Render Blocked Days List
+  async renderBlockedDays(chatId, messageId = null) {
+    if (blockedDates.length === 0) {
+      const emptyText = '🟢 *Нет закрытых дат.* Все дни открыты для бронирования пракков.';
+      const keyboard = [
+        [{ text: '🔒 Закрыть день', callback_data: 'menu:block_select_team:all' }],
+        [{ text: '🔙 Назад в меню', callback_data: 'menu:main' }]
+      ];
+      if (messageId) {
+        await this.sendApiRequest('editMessageText', {
+          chat_id: chatId,
+          message_id: messageId,
+          text: emptyText,
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: keyboard }
+        });
+      } else {
+        await this.sendApiRequest('sendMessage', {
+          chat_id: chatId,
+          text: emptyText,
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: keyboard }
+        });
+      }
+      return;
+    }
+
+    let resp = `🔒 *Список закрытых дней (${blockedDates.length}):*\n\n`;
+    const keyboard = [];
+
+    blockedDates.forEach((b, idx) => {
+      const tName = b.team === 'all' ? 'Все составы' : (b.team === 'main' ? 'Main' : 'Junior');
+      resp += `${idx + 1}. 📅 *${b.date}* (${tName})\n`;
+      keyboard.push([
+        { text: `🔓 Открыть ${b.date} (${tName})`, callback_data: `unblock:${b.date}:${b.team}` }
+      ]);
+    });
+
+    keyboard.push([
+      { text: '➕ Закрыть еще день', callback_data: 'menu:block_select_team:all' },
+      { text: '🔙 Назад в меню', callback_data: 'menu:main' }
+    ]);
+
+    if (messageId) {
+      await this.sendApiRequest('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    } else {
+      await this.sendApiRequest('sendMessage', {
+        chat_id: chatId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    }
+  }
+
+  // Render Matches
+  async renderMatches(chatId, messageId = null) {
+    const winCount = matches.filter(m => m.status === 'WIN').length;
+    const total = matches.length;
+    const winrate = total > 0 ? Math.round((winCount / total) * 100) : 0;
+
+    let resp = `⚔️ *Матчи команды Rekinder eSports*\n\n`;
+    resp += `📊 *Статистика:* ${winCount}W / ${total - winCount}L (${winrate}% WR)\n\n`;
+    resp += `*Последние игры:*\n`;
+
+    if (matches.length === 0) {
+      resp += `_Матчи еще не добавлены в базу._\n`;
+    } else {
+      matches.slice(0, 6).forEach((m, idx) => {
+        const icon = m.status === 'WIN' ? '🟢 WIN' : '🔴 LOSS';
+        resp += `${idx + 1}. *vs ${m.opponent}* — \`${m.score}\` (${icon})\n`;
+      });
+    }
+
+    const keyboard = [
+      [
+        { text: '➕ Добавить победу (WIN)', callback_data: 'match:pick_opp:WIN' },
+        { text: '➕ Добавить поражение (LOSS)', callback_data: 'match:pick_opp:LOSS' }
+      ],
+      [
+        { text: '🗑️ Удалить последний матч', callback_data: 'match:delete_last' }
+      ],
+      [
+        { text: '🔙 Назад в меню', callback_data: 'menu:main' }
+      ]
+    ];
+
+    if (messageId) {
+      await this.sendApiRequest('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    } else {
+      await this.sendApiRequest('sendMessage', {
+        chat_id: chatId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    }
+  }
+
+  // Render Players / Rosters
+  async renderPlayers(chatId, messageId = null) {
+    const mainPlayers = players.filter(p => p.team === 'main');
+    const juniorPlayers = players.filter(p => p.team === 'junior');
+
+    let resp = `👥 *Составы Rekinder eSports*\n\n`;
+    resp += `🛡️ *Main Roster (${mainPlayers.length} игроков):*\n`;
+    if (mainPlayers.length === 0) {
+      resp += `_Игроки не добавлены_\n`;
+    } else {
+      mainPlayers.forEach(p => {
+        resp += `• ${p.cap ? '👑 ' : ''}*${p.nick}* — ${p.role}\n`;
+      });
+    }
+
+    resp += `\n⚡ *Junior Roster (${juniorPlayers.length} игроков):*\n`;
+    if (juniorPlayers.length === 0) {
+      resp += `_Игроки не добавлены_\n`;
+    } else {
+      juniorPlayers.forEach(p => {
+        resp += `• ${p.cap ? '👑 ' : ''}*${p.nick}* — ${p.role}\n`;
+      });
+    }
+
+    resp += `\nВыберите состав для настройки игроков:`;
+
+    const keyboard = [
+      [
+        { text: '🛡️ Настроить Main Roster', callback_data: 'players:list:main' },
+        { text: '⚡ Настроить Junior Roster', callback_data: 'players:list:junior' }
+      ],
+      [
+        { text: '🔙 Назад в главное меню', callback_data: 'menu:main' }
+      ]
+    ];
+
+    if (messageId) {
+      await this.sendApiRequest('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    } else {
+      await this.sendApiRequest('sendMessage', {
+        chat_id: chatId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    }
+  }
+
+  // Render Status
+  async renderStatus(chatId, messageId = null) {
+    const totalBookings = bookings.length;
+    const confCount = bookings.filter(b => b.status === 'confirmed').length;
+    const pendCount = bookings.filter(b => b.status === 'pending').length;
+    const declCount = bookings.filter(b => b.status === 'declined').length;
+    const winCount = matches.filter(m => m.status === 'WIN').length;
+    const totalMatches = matches.length;
+    const winrate = totalMatches > 0 ? Math.round((winCount / totalMatches) * 100) : 0;
+
+    let resp = `📊 *Статус системы Rekinder eSports*\n\n`;
+    resp += `🟢 *Сервер:* Онлайн (Node.js Express / Порт 3000)\n`;
+    resp += `🤖 *Telegram Bot:* Активен\n`;
+    resp += `👤 *Активных чатов менеджеров:* ${managerChatIds.size}\n\n`;
+    resp += `📋 *Заявки на пракки:*\n`;
+    resp += `• Всего: *${totalBookings}*\n`;
+    resp += `• ✅ Подтверждено: *${confCount}*\n`;
+    resp += `• ⏳ В ожидании: *${pendCount}*\n`;
+    resp += `• ❌ Отклонено: *${declCount}*\n\n`;
+    resp += `🔒 *Закрытых дат:* *${blockedDates.length}*\n`;
+    resp += `👥 *Игроков в составах:* *${players.length}* (Main: ${players.filter(p=>p.team==='main').length}, Junior: ${players.filter(p=>p.team==='junior').length})\n`;
+    resp += `⚔️ *Матчи:* *${totalMatches}* игр (Винрейт: *${winrate}%*)\n`;
+
+    const keyboard = [
+      [
+        { text: '💾 Скачать базу данных', callback_data: 'menu:get_db' },
+        { text: '🔄 Обновить', callback_data: 'menu:status' }
+      ],
+      [
+        { text: '🔙 Главное меню', callback_data: 'menu:main' }
+      ]
+    ];
+
+    if (messageId) {
+      await this.sendApiRequest('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    } else {
+      await this.sendApiRequest('sendMessage', {
+        chat_id: chatId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    }
+  }
+
+  // Render Export Database Menu
+  async renderGetDb(chatId, messageId = null) {
+    let resp = `💾 *Экспорт базы данных Rekinder eSports*\n\n`;
+    resp += `Выберите какую таблицу вы хотите выгрузить прямо в чат:\n`;
+    resp += `• 📋 *Пракки* (${bookings.length} записей)\n`;
+    resp += `• 🔒 *Закрытые дни* (${blockedDates.length} записей)\n`;
+    resp += `• 👥 *Игроки* (${players.length} записей)\n`;
+    resp += `• ⚔️ *Матчи* (${matches.length} записей)\n`;
+    resp += `• 📦 *Полный дамп всей базы*`;
+
+    const keyboard = [
+      [
+        { text: '📋 Пракки (JSON)', callback_data: 'db:export:bookings' },
+        { text: '🔒 Закрытые дни (JSON)', callback_data: 'db:export:blocked' }
+      ],
+      [
+        { text: '👥 Игроки (JSON)', callback_data: 'db:export:players' },
+        { text: '⚔️ Матчи (JSON)', callback_data: 'db:export:matches' }
+      ],
+      [
+        { text: '📦 Полный дамп (Все таблицы)', callback_data: 'db:export:all' }
+      ],
+      [
+        { text: '🔙 Назад в главное меню', callback_data: 'menu:main' }
+      ]
+    ];
+
+    if (messageId) {
+      await this.sendApiRequest('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    } else {
+      await this.sendApiRequest('sendMessage', {
+        chat_id: chatId,
+        text: resp,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    }
   }
 
   // Generate date buttons for the next 14 days
@@ -327,104 +787,21 @@ class TelegramBotService {
 
       // Main Menu navigation
       if (data === 'menu:main') {
-        await this.sendApiRequest('editMessageText', {
-          chat_id: chatId,
-          message_id: messageId,
-          text: `🎮 *Панель управления Rekinder eSports*\n\nВыберите нужное действие кнопками ниже:`,
-          parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: this.getMainMenuKeyboard()
-          }
-        });
+        await this.renderMainMenu(chatId, messageId, fromUser, false);
         await this.sendApiRequest('answerCallbackQuery', { callback_query_id: cb.id });
         return;
       }
 
       // Show Pending Bookings
       if (data === 'menu:pending') {
-        const pending = bookings.filter(b => b.status === 'pending');
-        if (pending.length === 0) {
-          await this.sendApiRequest('editMessageText', {
-            chat_id: chatId,
-            message_id: messageId,
-            text: '✨ *Ожидающих заявок нет!* Все пракки обработаны.',
-            parse_mode: 'Markdown',
-            reply_markup: {
-              inline_keyboard: [[{ text: '🔙 Назад в меню', callback_data: 'menu:main' }]]
-            }
-          });
-          await this.sendApiRequest('answerCallbackQuery', { callback_query_id: cb.id });
-          return;
-        }
-
-        let resp = `⏳ *Ожидающие заявки на пракк (${pending.length}):*\n\n`;
-        const keyboard = [];
-
-        pending.forEach((b, idx) => {
-          resp += `${idx + 1}. *#${b.id}* — ${b.opponentTeam} vs ${b.team.toUpperCase()}\n`;
-          resp += `   📅 ${b.date} в ${b.time} (МСК) | ${b.format || 'BO3'}\n`;
-          resp += `   👤 Контакт: ${b.contact}\n\n`;
-
-          keyboard.push([
-            { text: `✅ #${b.id}`, callback_data: `confirm:${b.id}` },
-            { text: `❌ #${b.id}`, callback_data: `decline:${b.id}` },
-            { text: `🗑️ #${b.id}`, callback_data: `delete:${b.id}` }
-          ]);
-        });
-
-        keyboard.push([{ text: '🔙 Назад в меню', callback_data: 'menu:main' }]);
-
-        await this.sendApiRequest('editMessageText', {
-          chat_id: chatId,
-          message_id: messageId,
-          text: resp,
-          parse_mode: 'Markdown',
-          reply_markup: { inline_keyboard: keyboard }
-        });
+        await this.renderPendingBookings(chatId, messageId);
         await this.sendApiRequest('answerCallbackQuery', { callback_query_id: cb.id });
         return;
       }
 
       // Show All Bookings
       if (data === 'menu:bookings') {
-        const list = bookings.slice(0, 8);
-        if (list.length === 0) {
-          await this.sendApiRequest('editMessageText', {
-            chat_id: chatId,
-            message_id: messageId,
-            text: 'ℹ️ Список заявок пока пуст.',
-            parse_mode: 'Markdown',
-            reply_markup: {
-              inline_keyboard: [[{ text: '🔙 Назад в меню', callback_data: 'menu:main' }]]
-            }
-          });
-          await this.sendApiRequest('answerCallbackQuery', { callback_query_id: cb.id });
-          return;
-        }
-
-        let resp = `📋 *Последние заявки на пракки (${list.length}):*\n\n`;
-        const keyboard = [];
-
-        list.forEach((b, idx) => {
-          const statusIcon = b.status === 'confirmed' ? '✅' : b.status === 'declined' ? '❌' : '⏳';
-          resp += `${statusIcon} *#${b.id}* | ${b.date} ${b.time}\n`;
-          resp += `   ⚔️ ${b.opponentTeam} vs ${b.team.toUpperCase()} (${b.contact})\n\n`;
-
-          keyboard.push([
-            { text: `${b.status === 'confirmed' ? '❌ Отклонить' : '✅ Принять'} #${b.id}`, callback_data: `${b.status === 'confirmed' ? 'decline' : 'confirm'}:${b.id}` },
-            { text: `🗑️ Удалить`, callback_data: `delete:${b.id}` }
-          ]);
-        });
-
-        keyboard.push([{ text: '🔙 Назад в меню', callback_data: 'menu:main' }]);
-
-        await this.sendApiRequest('editMessageText', {
-          chat_id: chatId,
-          message_id: messageId,
-          text: resp,
-          parse_mode: 'Markdown',
-          reply_markup: { inline_keyboard: keyboard }
-        });
+        await this.renderAllBookings(chatId, messageId);
         await this.sendApiRequest('answerCallbackQuery', { callback_query_id: cb.id });
         return;
       }
@@ -537,85 +914,14 @@ class TelegramBotService {
 
       // Show Blocked Dates List
       if (data === 'menu:blocked') {
-        if (blockedDates.length === 0) {
-          await this.sendApiRequest('editMessageText', {
-            chat_id: chatId,
-            message_id: messageId,
-            text: '🟢 *Нет закрытых дат.* Все дни открыты для бронирования пракков.',
-            parse_mode: 'Markdown',
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '🔒 Закрыть день', callback_data: 'menu:block_select_team:all' }],
-                [{ text: '🔙 Назад в меню', callback_data: 'menu:main' }]
-              ]
-            }
-          });
-          await this.sendApiRequest('answerCallbackQuery', { callback_query_id: cb.id });
-          return;
-        }
-
-        let resp = `🔒 *Список закрытых дней (${blockedDates.length}):*\n\n`;
-        const keyboard = [];
-
-        blockedDates.forEach((b, idx) => {
-          const tName = b.team === 'all' ? 'Все составы' : (b.team === 'main' ? 'Main' : 'Junior');
-          resp += `${idx + 1}. 📅 *${b.date}* (${tName})\n`;
-          keyboard.push([
-            { text: `🔓 Открыть ${b.date} (${tName})`, callback_data: `unblock:${b.date}:${b.team}` }
-          ]);
-        });
-
-        keyboard.push([
-          { text: '➕ Закрыть еще день', callback_data: 'menu:block_select_team:all' },
-          { text: '🔙 Назад в меню', callback_data: 'menu:main' }
-        ]);
-
-        await this.sendApiRequest('editMessageText', {
-          chat_id: chatId,
-          message_id: messageId,
-          text: resp,
-          parse_mode: 'Markdown',
-          reply_markup: { inline_keyboard: keyboard }
-        });
+        await this.renderBlockedDays(chatId, messageId);
         await this.sendApiRequest('answerCallbackQuery', { callback_query_id: cb.id });
         return;
       }
 
       // Show Matches Menu
       if (data === 'menu:matches') {
-        const winCount = matches.filter(m => m.status === 'WIN').length;
-        const total = matches.length;
-        const winrate = total > 0 ? Math.round((winCount / total) * 100) : 0;
-
-        let resp = `⚔️ *Матчи команды Rekinder eSports*\n\n`;
-        resp += `📊 *Статистика:* ${winCount}W / ${total - winCount}L (${winrate}% WR)\n\n`;
-        resp += `*Последние игры:*\n`;
-
-        matches.slice(0, 6).forEach((m, idx) => {
-          const icon = m.status === 'WIN' ? '🟢 WIN' : '🔴 LOSS';
-          resp += `${idx + 1}. *vs ${m.opponent}* — \`${m.score}\` (${icon})\n`;
-        });
-
-        const keyboard = [
-          [
-            { text: '➕ Добавить победу (WIN)', callback_data: 'match:pick_opp:WIN' },
-            { text: '➕ Добавить поражение (LOSS)', callback_data: 'match:pick_opp:LOSS' }
-          ],
-          [
-            { text: '🗑️ Удалить последний матч', callback_data: 'match:delete_last' }
-          ],
-          [
-            { text: '🔙 Назад в меню', callback_data: 'menu:main' }
-          ]
-        ];
-
-        await this.sendApiRequest('editMessageText', {
-          chat_id: chatId,
-          message_id: messageId,
-          text: resp,
-          parse_mode: 'Markdown',
-          reply_markup: { inline_keyboard: keyboard }
-        });
+        await this.renderMatches(chatId, messageId);
         await this.sendApiRequest('answerCallbackQuery', { callback_query_id: cb.id });
         return;
       }
@@ -764,39 +1070,7 @@ class TelegramBotService {
 
       // Show Players / Rosters Menu
       if (data === 'menu:players') {
-        const mainPlayers = players.filter(p => p.team === 'main');
-        const juniorPlayers = players.filter(p => p.team === 'junior');
-
-        let resp = `👥 *Составы Rekinder eSports*\n\n`;
-        resp += `🛡️ *Main Roster (${mainPlayers.length} игроков):*\n`;
-        mainPlayers.forEach(p => {
-          resp += `• ${p.cap ? '👑 ' : ''}*${p.nick}* — ${p.role}\n`;
-        });
-
-        resp += `\n⚡ *Junior Roster (${juniorPlayers.length} игроков):*\n`;
-        juniorPlayers.forEach(p => {
-          resp += `• ${p.cap ? '👑 ' : ''}*${p.nick}* — ${p.role}\n`;
-        });
-
-        resp += `\nВыберите состав для настройки игроков:`;
-
-        const keyboard = [
-          [
-            { text: '🛡️ Настроить Main Roster', callback_data: 'players:list:main' },
-            { text: '⚡ Настроить Junior Roster', callback_data: 'players:list:junior' }
-          ],
-          [
-            { text: '🔙 Назад в главное меню', callback_data: 'menu:main' }
-          ]
-        ];
-
-        await this.sendApiRequest('editMessageText', {
-          chat_id: chatId,
-          message_id: messageId,
-          text: resp,
-          parse_mode: 'Markdown',
-          reply_markup: { inline_keyboard: keyboard }
-        });
+        await this.renderPlayers(chatId, messageId);
         await this.sendApiRequest('answerCallbackQuery', { callback_query_id: cb.id });
         return;
       }
@@ -978,82 +1252,14 @@ class TelegramBotService {
 
       // System Status Menu
       if (data === 'menu:status') {
-        const totalBookings = bookings.length;
-        const confCount = bookings.filter(b => b.status === 'confirmed').length;
-        const pendCount = bookings.filter(b => b.status === 'pending').length;
-        const declCount = bookings.filter(b => b.status === 'declined').length;
-        const winCount = matches.filter(m => m.status === 'WIN').length;
-        const totalMatches = matches.length;
-        const winrate = totalMatches > 0 ? Math.round((winCount / totalMatches) * 100) : 0;
-
-        let resp = `📊 *Статус системы Rekinder eSports*\n\n`;
-        resp += `🟢 *Сервер:* Онлайн (Node.js Express / Порт 3000)\n`;
-        resp += `🤖 *Telegram Bot:* Активен\n`;
-        resp += `👤 *Активных чатов менеджеров:* ${managerChatIds.size}\n\n`;
-        resp += `📋 *Заявки на пракки:*\n`;
-        resp += `• Всего: *${totalBookings}*\n`;
-        resp += `• ✅ Подтверждено: *${confCount}*\n`;
-        resp += `• ⏳ В ожидании: *${pendCount}*\n`;
-        resp += `• ❌ Отклонено: *${declCount}*\n\n`;
-        resp += `🔒 *Закрытых дат:* *${blockedDates.length}*\n`;
-        resp += `👥 *Игроков в составах:* *${players.length}* (Main: ${players.filter(p=>p.team==='main').length}, Junior: ${players.filter(p=>p.team==='junior').length})\n`;
-        resp += `⚔️ *Матчи:* *${totalMatches}* игр (Винрейт: *${winrate}%*)\n`;
-
-        const keyboard = [
-          [
-            { text: '💾 Скачать базу данных', callback_data: 'menu:get_db' },
-            { text: '🔄 Обновить', callback_data: 'menu:status' }
-          ],
-          [
-            { text: '🔙 Главное меню', callback_data: 'menu:main' }
-          ]
-        ];
-
-        await this.sendApiRequest('editMessageText', {
-          chat_id: chatId,
-          message_id: messageId,
-          text: resp,
-          parse_mode: 'Markdown',
-          reply_markup: { inline_keyboard: keyboard }
-        });
+        await this.renderStatus(chatId, messageId);
         await this.sendApiRequest('answerCallbackQuery', { callback_query_id: cb.id });
         return;
       }
 
       // Get Database Menu
       if (data === 'menu:get_db') {
-        let resp = `💾 *Экспорт базы данных Rekinder eSports*\n\n`;
-        resp += `Выберите какую таблицу вы хотите выгрузить прямо в чат:\n`;
-        resp += `• 📋 *Пракки* (${bookings.length} записей)\n`;
-        resp += `• 🔒 *Закрытые дни* (${blockedDates.length} записей)\n`;
-        resp += `• 👥 *Игроки* (${players.length} записей)\n`;
-        resp += `• ⚔️ *Матчи* (${matches.length} записей)\n`;
-        resp += `• 📦 *Полный дамп всей базы*`;
-
-        const keyboard = [
-          [
-            { text: '📋 Пракки (JSON)', callback_data: 'db:export:bookings' },
-            { text: '🔒 Закрытые дни (JSON)', callback_data: 'db:export:blocked' }
-          ],
-          [
-            { text: '👥 Игроки (JSON)', callback_data: 'db:export:players' },
-            { text: '⚔️ Матчи (JSON)', callback_data: 'db:export:matches' }
-          ],
-          [
-            { text: '📦 Полный дамп (Все таблицы)', callback_data: 'db:export:all' }
-          ],
-          [
-            { text: '🔙 Назад в главное меню', callback_data: 'menu:main' }
-          ]
-        ];
-
-        await this.sendApiRequest('editMessageText', {
-          chat_id: chatId,
-          message_id: messageId,
-          text: resp,
-          parse_mode: 'Markdown',
-          reply_markup: { inline_keyboard: keyboard }
-        });
+        await this.renderGetDb(chatId, messageId);
         await this.sendApiRequest('answerCallbackQuery', { callback_query_id: cb.id });
         return;
       }
@@ -1195,31 +1401,59 @@ class TelegramBotService {
       return;
     }
 
-    // Handle incoming text (show button menu directly)
+    // Handle incoming text messages & reply keyboard buttons
     if (update.message && update.message.text) {
       const msg = update.message;
       const chatId = String(msg.chat.id);
       const text = msg.text.trim();
+      const lower = text.toLowerCase();
       const fromUser = msg.from?.first_name || 'Менеджер';
 
       // Auto-register chat ID for notifications
       managerChatIds.add(chatId);
 
-      const welcome = `👋 Привет, *${fromUser}*!\n\n` +
-        `🎮 *Панель управления пракками Rekinder eSports*\n\n` +
-        `Управляйте заявками и закрытием дней с помощью кнопок ниже:\n` +
-        `• ⏳ *Ожидающие заявки* — просмотр и подтверждение\n` +
-        `• 🔒 *Закрыть день* — быстрый выбор даты в 1 клик\n` +
-        `• 🔓 *Закрытые дни* — список и открытие закрытых дат`;
+      if (lower.includes('ожидающ') || text === '⏳ Ожидающие заявки' || lower === '/pending') {
+        await this.renderPendingBookings(chatId, null);
+        return;
+      }
 
-      await this.sendApiRequest('sendMessage', {
-        chat_id: chatId,
-        text: welcome,
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: this.getMainMenuKeyboard()
-        }
-      });
+      if (lower.includes('все пракки') || text === '📋 Все пракки' || lower === '/bookings' || lower === 'пракки') {
+        await this.renderAllBookings(chatId, null);
+        return;
+      }
+
+      if (lower.includes('закрыть день') || text === '🔒 Закрыть день' || lower === '/block') {
+        await this.renderDatePicker(chatId, null, 'all');
+        return;
+      }
+
+      if (lower.includes('закрытые дни') || text === '🔓 Закрытые дни' || lower === '/unblock' || lower === '/blocked') {
+        await this.renderBlockedDays(chatId, null);
+        return;
+      }
+
+      if (lower.includes('матчи') || text === '⚔️ Матчи и Игры' || lower === '/matches') {
+        await this.renderMatches(chatId, null);
+        return;
+      }
+
+      if (lower.includes('состав') || lower.includes('игрок') || text === '👥 Составы и Игроки' || lower === '/players') {
+        await this.renderPlayers(chatId, null);
+        return;
+      }
+
+      if (lower.includes('статус') || text === '📊 Статус системы' || lower === '/status') {
+        await this.renderStatus(chatId, null);
+        return;
+      }
+
+      if (lower.includes('экспорт') || lower.includes('получить бд') || lower.includes('дамп') || text === '💾 Экспорт БД' || lower === '/db') {
+        await this.renderGetDb(chatId, null);
+        return;
+      }
+
+      // Default: show main menu with updated persistent keyboard
+      await this.renderMainMenu(chatId, null, fromUser, true);
       return;
     }
   }

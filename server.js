@@ -1,3 +1,12 @@
+import dns from 'node:dns';
+
+// Force Node.js to resolve IPv4 addresses first
+try {
+  if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+  }
+} catch (e) {}
+
 import express from 'express';
 import cors from 'cors';
 import path from 'path';

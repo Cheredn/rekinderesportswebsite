@@ -1,4 +1,29 @@
 import nodemailer from 'nodemailer';
+import dns from 'node:dns';
+
+// Force Node.js to prioritize IPv4 to avoid ENETUNREACH in cloud environments (Render, etc.)
+try {
+  if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+  }
+} catch (e) {
+  // Ignore if not supported
+}
+
+// Explicit IPv4 DNS lookup function for nodemailer/tls/net
+const ipv4Lookup = (hostname, options, callback) => {
+  if (typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+  dns.lookup(hostname, { family: 4 }, (err, address, family) => {
+    if (err) {
+      // Fallback
+      return dns.lookup(hostname, callback);
+    }
+    callback(null, address, family || 4);
+  });
+};
 
 export const sentEmailsHistory = [];
 
@@ -67,11 +92,13 @@ async function getTransporter() {
       secure,
       auth: { user, pass },
       family: 4, // Force IPv4 to prevent ENETUNREACH on IPv6 cloud environments
+      lookup: ipv4Lookup,
       tls: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false,
+        servername: host
       },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
+      connectionTimeout: 12000,
+      greetingTimeout: 12000,
       socketTimeout: 15000
     };
 
@@ -236,8 +263,10 @@ async function sendMailSafely(mailConfig, mailOptions) {
             pass: process.env.SMTP_PASS
           },
           family: 4,
+          lookup: ipv4Lookup,
           tls: {
-            rejectUnauthorized: false
+            rejectUnauthorized: false,
+            servername: 'smtp.gmail.com'
           },
           connectionTimeout: 12000,
           greetingTimeout: 12000,

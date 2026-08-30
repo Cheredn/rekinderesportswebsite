@@ -108,19 +108,44 @@ function saveMatches() {
   }
 }
 
+// Registered manager chats persistent storage
+const CHATS_FILE = path.join(__dirname, 'manager_chats.json');
+let managerChatIds = new Set();
+
+function loadManagerChats() {
+  try {
+    if (fs.existsSync(CHATS_FILE)) {
+      const data = fs.readFileSync(CHATS_FILE, 'utf-8');
+      const parsed = JSON.parse(data || '[]');
+      if (Array.isArray(parsed)) {
+        parsed.forEach(id => managerChatIds.add(String(id).trim()));
+      }
+    }
+  } catch (e) {
+    console.error('Error loading manager_chats.json:', e.message);
+  }
+
+  if (process.env.TELEGRAM_CHAT_ID) {
+    process.env.TELEGRAM_CHAT_ID.split(',').forEach(id => {
+      const trimmed = id.trim();
+      if (trimmed) managerChatIds.add(trimmed);
+    });
+  }
+}
+
+function saveManagerChats() {
+  try {
+    fs.writeFileSync(CHATS_FILE, JSON.stringify(Array.from(managerChatIds), null, 2), 'utf-8');
+  } catch (e) {
+    console.error('Error saving manager_chats.json:', e.message);
+  }
+}
+
 loadBookings();
 loadBlockedDates();
 loadPlayers();
 loadMatches();
-
-// Registered manager chats
-let managerChatIds = new Set();
-if (process.env.TELEGRAM_CHAT_ID) {
-  process.env.TELEGRAM_CHAT_ID.split(',').forEach(id => {
-    const trimmed = id.trim();
-    if (trimmed) managerChatIds.add(trimmed);
-  });
-}
+loadManagerChats();
 
 function deleteBookingById(id) {
   const index = bookings.findIndex(b => b.id.toUpperCase() === id.toUpperCase());
@@ -1410,7 +1435,11 @@ class TelegramBotService {
       const fromUser = msg.from?.first_name || 'Менеджер';
 
       // Auto-register chat ID for notifications
-      managerChatIds.add(chatId);
+      if (!managerChatIds.has(chatId)) {
+        managerChatIds.add(chatId);
+        saveManagerChats();
+        console.log(`[TelegramBot] Registered new manager chat: ${chatId} (${fromUser})`);
+      }
 
       if (lower.includes('ожидающ') || text === '⏳ Ожидающие заявки' || lower === '/pending') {
         await this.renderPendingBookings(chatId, null);

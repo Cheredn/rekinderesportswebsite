@@ -3,6 +3,40 @@ import nodemailer from 'nodemailer';
 export const sentEmailsHistory = [];
 
 let testAccountTransporter = null;
+let isInitializingTestAccount = false;
+
+// Pre-warm test account on startup in the background if no real credentials
+async function initTestAccount() {
+  if (testAccountTransporter || isInitializingTestAccount) return;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (user && pass) return; // Real SMTP used
+
+  isInitializingTestAccount = true;
+  try {
+    const testAccount = await Promise.race([
+      nodemailer.createTestAccount(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Ethereal setup timeout')), 6000))
+    ]);
+    testAccountTransporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass
+      }
+    });
+    console.log(`[Email Service] Pre-warmed ethereal test mailbox: ${testAccount.user}`);
+  } catch (e) {
+    console.warn('[Email Service] Background test account init info:', e.message);
+  } finally {
+    isInitializingTestAccount = false;
+  }
+}
+
+// Start pre-warm asynchronously without blocking startup
+initTestAccount().catch(() => {});
 
 /**
  * Creates and returns a nodemailer transporter based on environment variables or test account
@@ -14,45 +48,60 @@ async function getTransporter() {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
-  // If real credentials provided, use real SMTP
+  // If real credentials provided, use real SMTP with connection timeout
   if (user && pass) {
     return {
       transporter: nodemailer.createTransport({
         host,
         port,
         secure,
-        auth: { user, pass }
+        auth: { user, pass },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 8000
       }),
       isTest: false,
       from: process.env.SMTP_FROM || `"Rekinder eSports" <${user}>`
     };
   }
 
-  // Fallback: Create test ethereal transporter for instant zero-config testing
-  if (!testAccountTransporter) {
-    try {
-      const testAccount = await nodemailer.createTestAccount();
-      testAccountTransporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass
-        }
-      });
-      console.log(`[Email Service] Created ethereal test mailbox: ${testAccount.user}`);
-    } catch (e) {
-      console.warn('[Email Service] Failed to create test account:', e.message);
-      return null;
-    }
+  // If test transporter is ready, use it
+  if (testAccountTransporter) {
+    return {
+      transporter: testAccountTransporter,
+      isTest: true,
+      from: '"Rekinder eSports" <noreply@rekinder-esports.com>'
+    };
   }
 
-  return {
-    transporter: testAccountTransporter,
-    isTest: true,
-    from: '"Rekinder eSports" <noreply@rekinder-esports.com>'
-  };
+  // Fallback: Create test ethereal transporter with 5s hard timeout
+  try {
+    const testAccount = await Promise.race([
+      nodemailer.createTestAccount(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Ethereal test mailbox timeout')), 5000))
+    ]);
+    testAccountTransporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass
+      },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 8000
+    });
+    console.log(`[Email Service] Created ethereal test mailbox: ${testAccount.user}`);
+    return {
+      transporter: testAccountTransporter,
+      isTest: true,
+      from: '"Rekinder eSports" <noreply@rekinder-esports.com>'
+    };
+  } catch (e) {
+    console.warn('[Email Service] Test account unavailable:', e.message);
+    return null;
+  }
 }
 
 /**

@@ -58,25 +58,21 @@ async function getTransporter() {
     }
 
     const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-    const isGmail = host.includes('gmail') || user.includes('gmail');
+    const port = parseInt(process.env.SMTP_PORT || '465', 10);
+    const secure = process.env.SMTP_SECURE === 'false' ? false : (port === 465);
 
-    const transportOptions = isGmail ? {
-      service: 'gmail',
-      auth: { user, pass },
-      tls: {
-        rejectUnauthorized: false
-      }
-    } : {
+    const transportOptions = {
       host,
-      port: parseInt(process.env.SMTP_PORT || '465', 10),
-      secure: process.env.SMTP_SECURE === 'false' ? false : (parseInt(process.env.SMTP_PORT || '465', 10) === 465),
+      port,
+      secure,
       auth: { user, pass },
+      family: 4, // Force IPv4 to prevent ENETUNREACH on IPv6 cloud environments
       tls: {
         rejectUnauthorized: false
       },
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 20000
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000
     };
 
     realTransporter = nodemailer.createTransport(transportOptions);
@@ -218,6 +214,48 @@ function generateEmailTemplate({ title, badge, badgeColor, content, booking }) {
 }
 
 /**
+ * Helper to reliably send mail with automatic IPv4 and port fallback
+ */
+async function sendMailSafely(mailConfig, mailOptions) {
+  const { transporter, isTest, from } = mailConfig;
+  const fullOptions = { from, ...mailOptions };
+
+  try {
+    const info = await transporter.sendMail(fullOptions);
+    return { info, isTest };
+  } catch (primaryErr) {
+    if (!isTest && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      console.warn(`[Email Service] Primary SMTP send failed (${primaryErr.message}). Retrying via Gmail port 587 STARTTLS (IPv4)...`);
+      try {
+        const fallbackTransporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 587,
+          secure: false,
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+          },
+          family: 4,
+          tls: {
+            rejectUnauthorized: false
+          },
+          connectionTimeout: 12000,
+          greetingTimeout: 12000,
+          socketTimeout: 15000
+        });
+        const info = await fallbackTransporter.sendMail(fullOptions);
+        realTransporter = fallbackTransporter;
+        return { info, isTest: false };
+      } catch (fallbackErr) {
+        console.error(`[Email Service] Port 587 fallback also failed: ${fallbackErr.message}`);
+        throw fallbackErr;
+      }
+    }
+    throw primaryErr;
+  }
+}
+
+/**
  * Send email when booking is created
  */
 export async function sendBookingReceivedEmail(booking) {
@@ -229,8 +267,6 @@ export async function sendBookingReceivedEmail(booking) {
     return false;
   }
 
-  const { transporter, isTest, from } = mailConfig;
-
   const subject = `⚡ Заявка на пракк #${booking.id} принята в обработку — Rekinder eSports`;
   const html = generateEmailTemplate({
     title: `Заявка на пракк #${booking.id} принята!`,
@@ -241,8 +277,7 @@ export async function sendBookingReceivedEmail(booking) {
   });
 
   try {
-    const info = await transporter.sendMail({
-      from,
+    const { info, isTest } = await sendMailSafely(mailConfig, {
       to: booking.email,
       subject,
       html
@@ -292,8 +327,6 @@ export async function sendBookingStatusUpdateEmail(booking) {
     return false;
   }
 
-  const { transporter, isTest, from } = mailConfig;
-
   const title = isConfirmed 
     ? `Пракк #${booking.id} подтвержден! ✅` 
     : `Заявка #${booking.id} отклонена ❌`;
@@ -318,8 +351,7 @@ export async function sendBookingStatusUpdateEmail(booking) {
     : `❌ Обновление статуса по заявке #${booking.id} — Rekinder eSports`;
 
   try {
-    const info = await transporter.sendMail({
-      from,
+    const { info, isTest } = await sendMailSafely(mailConfig, {
       to: booking.email,
       subject,
       html

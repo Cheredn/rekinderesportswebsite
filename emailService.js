@@ -38,28 +38,51 @@ async function initTestAccount() {
 // Start pre-warm asynchronously without blocking startup
 initTestAccount().catch(() => {});
 
+let realTransporter = null;
+
 /**
  * Creates and returns a nodemailer transporter based on environment variables or test account
  */
 async function getTransporter() {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.SMTP_PORT || '465', 10);
-  const secure = process.env.SMTP_SECURE === 'false' ? false : (port === 465);
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
-  // If real credentials provided, use real SMTP with connection timeout
+  // If real credentials provided, use cached or create real SMTP transporter
   if (user && pass) {
+    if (realTransporter) {
+      return {
+        transporter: realTransporter,
+        isTest: false,
+        from: process.env.SMTP_FROM || `"Rekinder eSports" <${user}>`
+      };
+    }
+
+    const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+    const isGmail = host.includes('gmail') || user.includes('gmail');
+
+    const transportOptions = isGmail ? {
+      service: 'gmail',
+      auth: { user, pass },
+      tls: {
+        rejectUnauthorized: false
+      }
+    } : {
+      host,
+      port: parseInt(process.env.SMTP_PORT || '465', 10),
+      secure: process.env.SMTP_SECURE === 'false' ? false : (parseInt(process.env.SMTP_PORT || '465', 10) === 465),
+      auth: { user, pass },
+      tls: {
+        rejectUnauthorized: false
+      },
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000
+    };
+
+    realTransporter = nodemailer.createTransport(transportOptions);
+
     return {
-      transporter: nodemailer.createTransport({
-        host,
-        port,
-        secure,
-        auth: { user, pass },
-        connectionTimeout: 5000,
-        greetingTimeout: 5000,
-        socketTimeout: 8000
-      }),
+      transporter: realTransporter,
       isTest: false,
       from: process.env.SMTP_FROM || `"Rekinder eSports" <${user}>`
     };
@@ -88,9 +111,9 @@ async function getTransporter() {
         user: testAccount.user,
         pass: testAccount.pass
       },
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 8000
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000
     });
     console.log(`[Email Service] Created ethereal test mailbox: ${testAccount.user}`);
     return {

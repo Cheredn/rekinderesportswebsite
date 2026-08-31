@@ -108,17 +108,53 @@ function saveMatches() {
   }
 }
 
+// Whitelisted Admin Telegram IDs for Rekinder eSports Management
+export const DEFAULT_ALLOWED_ADMIN_IDS = ['1014379451', '8868074209'];
+
+export function getAllowedAdminIds() {
+  const allowed = new Set(DEFAULT_ALLOWED_ADMIN_IDS);
+  if (process.env.ALLOWED_ADMIN_IDS) {
+    process.env.ALLOWED_ADMIN_IDS.split(',').forEach(id => {
+      const trimmed = id.trim();
+      if (trimmed) allowed.add(trimmed);
+    });
+  }
+  if (process.env.TELEGRAM_CHAT_ID) {
+    process.env.TELEGRAM_CHAT_ID.split(',').forEach(id => {
+      const trimmed = id.trim();
+      if (trimmed) allowed.add(trimmed);
+    });
+  }
+  return allowed;
+}
+
+export function isUserAllowedAdmin(userId) {
+  if (!userId) return false;
+  const allowed = getAllowedAdminIds();
+  return allowed.has(String(userId).trim());
+}
+
 // Registered manager chats persistent storage
 const CHATS_FILE = path.join(__dirname, 'manager_chats.json');
 let managerChatIds = new Set();
 
 function loadManagerChats() {
+  managerChatIds.clear();
+  
+  // Always include default authorized admins
+  DEFAULT_ALLOWED_ADMIN_IDS.forEach(id => managerChatIds.add(id));
+
   try {
     if (fs.existsSync(CHATS_FILE)) {
       const data = fs.readFileSync(CHATS_FILE, 'utf-8');
       const parsed = JSON.parse(data || '[]');
       if (Array.isArray(parsed)) {
-        parsed.forEach(id => managerChatIds.add(String(id).trim()));
+        parsed.forEach(id => {
+          const strId = String(id).trim();
+          if (isUserAllowedAdmin(strId)) {
+            managerChatIds.add(strId);
+          }
+        });
       }
     }
   } catch (e) {
@@ -128,9 +164,11 @@ function loadManagerChats() {
   if (process.env.TELEGRAM_CHAT_ID) {
     process.env.TELEGRAM_CHAT_ID.split(',').forEach(id => {
       const trimmed = id.trim();
-      if (trimmed) managerChatIds.add(trimmed);
+      if (trimmed && isUserAllowedAdmin(trimmed)) managerChatIds.add(trimmed);
     });
   }
+
+  saveManagerChats();
 }
 
 function saveManagerChats() {
@@ -805,6 +843,19 @@ class TelegramBotService {
     // Handle Callback Query (Buttons clicked in Telegram)
     if (update.callback_query) {
       const cb = update.callback_query;
+      const senderId = String(cb.from?.id || cb.message?.chat?.id || '');
+
+      // Security check: Only whitelisted admins can interact
+      if (!isUserAllowedAdmin(senderId)) {
+        console.warn(`[TelegramBot] Unauthorized callback_query attempt from ID ${senderId} (@${cb.from?.username || 'unknown'})`);
+        await this.sendApiRequest('answerCallbackQuery', {
+          callback_query_id: cb.id,
+          text: '⛔ Доступ запрещен. Бот только для администраторов Rekinder eSports.',
+          show_alert: true
+        });
+        return;
+      }
+
       const data = cb.data || '';
       const chatId = cb.message?.chat?.id;
       const messageId = cb.message?.message_id;
@@ -1430,15 +1481,28 @@ class TelegramBotService {
     if (update.message && update.message.text) {
       const msg = update.message;
       const chatId = String(msg.chat.id);
+      const senderId = String(msg.from?.id || msg.chat.id);
       const text = msg.text.trim();
       const lower = text.toLowerCase();
       const fromUser = msg.from?.first_name || 'Менеджер';
 
-      // Auto-register chat ID for notifications
+      // Security check: Only allowed admins can interact with the bot
+      if (!isUserAllowedAdmin(senderId)) {
+        console.warn(`[TelegramBot] Unauthorized message attempt from ID ${senderId} (@${msg.from?.username || 'unknown'} - ${fromUser}): "${text}"`);
+        await this.sendApiRequest('sendMessage', {
+          chat_id: chatId,
+          text: `⛔ *Доступ ограничен!*\n\nЭтот бот предназначен исключительно для руководства команды *Rekinder eSports*.\n\nВаш Telegram ID: \`${senderId}\`\nЕсли вы администратор, передайте этот ID руководству.`,
+          parse_mode: 'Markdown',
+          reply_markup: { remove_keyboard: true }
+        });
+        return;
+      }
+
+      // Auto-register authorized admin chat ID for notifications
       if (!managerChatIds.has(chatId)) {
         managerChatIds.add(chatId);
         saveManagerChats();
-        console.log(`[TelegramBot] Registered new manager chat: ${chatId} (${fromUser})`);
+        console.log(`[TelegramBot] Registered authorized manager chat: ${chatId} (${fromUser})`);
       }
 
       if (lower.includes('ожидающ') || text === '⏳ Ожидающие заявки' || lower === '/pending') {

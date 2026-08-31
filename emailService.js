@@ -116,7 +116,7 @@ async function getTransporter() {
     return {
       transporter: testAccountTransporter,
       isTest: true,
-      from: '"Rekinder eSports" <noreply@rekinder-esports.com>'
+      from: '"Rekinder eSports" <noreply@rekinderesports.com>'
     };
   }
 
@@ -142,7 +142,7 @@ async function getTransporter() {
     return {
       transporter: testAccountTransporter,
       isTest: true,
-      from: '"Rekinder eSports" <noreply@rekinder-esports.com>'
+      from: '"Rekinder eSports" <noreply@rekinderesports.com>'
     };
   } catch (e) {
     console.warn('[Email Service] Test account unavailable:', e.message);
@@ -232,7 +232,7 @@ function generateEmailTemplate({ title, badge, badgeColor, content, booking }) {
     </div>
     <div class="email-footer">
       © ${new Date().getFullYear()} Rekinder eSports Organization. Все права защищены.<br>
-      Официальный сайт: <a href="https://rekinder-esports.com">rekinder-esports.com</a>
+      Официальный сайт: <a href="https://rekinderesports.com">rekinderesports.com</a>
     </div>
   </div>
 </body>

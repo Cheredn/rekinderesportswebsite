@@ -46,22 +46,10 @@
                 <div class="hero-btns">
                     <a href="#roster" class="btn-primary" id="btn-hero-roster">Узнать состав</a>
                     <a href="#matches" class="btn-secondary" id="btn-hero-matches">Последние игры</a>
-                    <div class="booking-split-container" id="booking-split-container">
-                        <div class="booking-initial-btn" id="btn-hero-booking">
-                            <i class="fa-solid fa-gamepad"></i>
-                            <span>Забронировать игру</span>
-                        </div>
-                        <div class="booking-options">
-                            <button type="button" class="booking-sub-btn btn-booking-main" id="btn-booking-main" data-team="main">
-                                <i class="fa-solid fa-shield"></i>
-                                <span>Rekinder Main</span>
-                            </button>
-                            <button type="button" class="booking-sub-btn btn-booking-junior" id="btn-booking-junior" data-team="junior">
-                                <i class="fa-solid fa-star"></i>
-                                <span>Rekinder Junior</span>
-                            </button>
-                        </div>
-                    </div>
+                    <button type="button" class="btn-booking" id="btn-hero-booking">
+                        <i class="fa-solid fa-gamepad"></i>
+                        <span>Забронировать игру</span>
+                    </button>
                 </div>
             </div>
         </section>
@@ -83,8 +71,6 @@
         <section id="roster" class="roster-section container">
             <h2 class="section-title reveal"><span>Main</span> Roster</h2>
             <div id="main-roster-grid" class="roster-grid"></div>
-            <h3 class="sub-title reveal"><span>Junior</span> Roster</h3>
-            <div id="junior-roster-grid" class="roster-grid"></div>
         </section>
 
         <section id="matches" class="matches-section container">
@@ -117,22 +103,13 @@
 
                 <!-- TAB 1: BOOKING FORM WITH CALENDAR -->
                 <div class="scrim-tab-content active" id="scrim-tab-form">
-                    <!-- Team Selector -->
-                    <div class="scrim-team-picker">
-                        <label class="scrim-team-card active" data-team="main" id="team-card-main">
-                            <input type="radio" name="target_team" value="main" checked>
-                            <div class="team-card-inner">
-                                <div class="team-card-badge">MAIN ROSTER</div>
-                                <h4>Rekinder eSports</h4>
-                            </div>
-                        </label>
-                        <label class="scrim-team-card" data-team="junior" id="team-card-junior">
-                            <input type="radio" name="target_team" value="junior">
-                            <div class="team-card-inner">
-                                <div class="team-card-badge junior">JUNIOR ROSTER</div>
-                                <h4>Rekinder Junior <span class="junior-gold">CS2</span></h4>
-                            </div>
-                        </label>
+                    <!-- Team Target -->
+                    <div class="scrim-team-single">
+                        <div class="team-card-inner-single">
+                            <div class="team-card-badge">MAIN ROSTER</div>
+                            <h4>Rekinder eSports CS2</h4>
+                        </div>
+                        <input type="hidden" name="target_team" value="main" id="target-team-input">
                     </div>
 
                     <form id="scrim-booking-form" class="scrim-form-grid">
@@ -271,9 +248,7 @@
                             <input type="text" id="schedule-search-input" placeholder="Поиск по ID (#PRAC-...) или названию команды...">
                         </div>
                         <div class="filter-team-group">
-                            <button type="button" class="filter-btn active" data-filter-team="all">Все составы</button>
-                            <button type="button" class="filter-btn" data-filter-team="main">Main Roster</button>
-                            <button type="button" class="filter-btn" data-filter-team="junior">Junior</button>
+                            <span class="schedule-team-label"><i class="fa-solid fa-shield"></i> Rekinder Main</span>
                         </div>
                     </div>
 

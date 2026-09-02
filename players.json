@@ -1,1 +1,37 @@
-[]
+[
+  {
+    "nick": "UNKNOWN",
+    "role": "Player",
+    "team": "main",
+    "cap": 0,
+    "photo": "logo.png"
+  },
+  {
+    "nick": "UNKNOWN",
+    "role": "Player",
+    "team": "main",
+    "cap": 0,
+    "photo": "logo.png"
+  },
+  {
+    "nick": "UNKNOWN",
+    "role": "Captain",
+    "team": "main",
+    "cap": 1,
+    "photo": "logo.png"
+  },
+  {
+    "nick": "UNKNOWN",
+    "role": "Player",
+    "team": "main",
+    "cap": 0,
+    "photo": "logo.png"
+  },
+  {
+    "nick": "UNKNOWN",
+    "role": "Player",
+    "team": "main",
+    "cap": 0,
+    "photo": "logo.png"
+  }
+]

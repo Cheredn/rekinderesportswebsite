@@ -62,18 +62,34 @@ function saveBlockedDates() {
   }
 }
 
+const DEFAULT_ROSTER_PLAYERS = [
+  // Main Roster (5 UNKNOWN players, middle is Captain)
+  { nick: "UNKNOWN", role: "Rifler", team: "main", cap: 0, photo: "logo.png" },
+  { nick: "UNKNOWN", role: "Rifler", team: "main", cap: 0, photo: "logo.png" },
+  { nick: "UNKNOWN", role: "Captain", team: "main", cap: 1, photo: "logo.png" },
+  { nick: "UNKNOWN", role: "Sniper", team: "main", cap: 0, photo: "logo.png" },
+  { nick: "UNKNOWN", role: "Support", team: "main", cap: 0, photo: "logo.png" }
+];
+
 function loadPlayers() {
   try {
     if (fs.existsSync(PLAYERS_FILE)) {
       const data = fs.readFileSync(PLAYERS_FILE, 'utf-8');
-      players = JSON.parse(data || '[]');
+      const parsed = JSON.parse(data || '[]');
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        players = parsed;
+      } else {
+        players = [...DEFAULT_ROSTER_PLAYERS];
+        savePlayers();
+      }
     } else {
-      players = [];
+      players = [...DEFAULT_ROSTER_PLAYERS];
       savePlayers();
     }
   } catch (err) {
     console.error('Error loading players:', err);
-    players = [];
+    players = [...DEFAULT_ROSTER_PLAYERS];
+    savePlayers();
   }
 }
 
@@ -85,18 +101,32 @@ function savePlayers() {
   }
 }
 
+const DEFAULT_MATCHES = [
+  { opponent: "NAVI Junior", score: "13:9", status: "WIN", opp_logo: "navi.png", date: "2026-03-01" },
+  { opponent: "Spirit Academy", score: "13:11", status: "WIN", opp_logo: "spirit.png", date: "2026-02-28" },
+  { opponent: "MOUZ NXT", score: "9:13", status: "LOSS", opp_logo: "mouz.png", date: "2026-02-26" },
+  { opponent: "Astralis Talent", score: "13:7", status: "WIN", opp_logo: "astralis.png", date: "2026-02-24" }
+];
+
 function loadMatches() {
   try {
     if (fs.existsSync(MATCHES_FILE)) {
       const data = fs.readFileSync(MATCHES_FILE, 'utf-8');
-      matches = JSON.parse(data || '[]');
+      const parsed = JSON.parse(data || '[]');
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        matches = parsed;
+      } else {
+        matches = [...DEFAULT_MATCHES];
+        saveMatches();
+      }
     } else {
-      matches = [];
+      matches = [...DEFAULT_MATCHES];
       saveMatches();
     }
   } catch (err) {
     console.error('Error loading matches:', err);
-    matches = [];
+    matches = [...DEFAULT_MATCHES];
+    saveMatches();
   }
 }
 
@@ -233,7 +263,7 @@ class TelegramBotService {
 
   // Format booking card for Telegram
   formatBookingMessage(booking) {
-    const teamTitle = booking.team === 'junior' ? 'Rekinder eSports Junior' : 'Rekinder eSports (Main)';
+    const teamTitle = 'Rekinder eSports';
     const statusEmoji = booking.status === 'confirmed' ? '✅ ПОДТВЕРЖДЕН' :
                         booking.status === 'declined' ? '❌ ОТКЛОНЕН' : '⏳ В ОЖИДАНИИ';
 
@@ -354,7 +384,7 @@ class TelegramBotService {
       `• 🔒 *Закрыть день* — календарь на 14 дней в 1 клик\n` +
       `• 🔓 *Закрытые дни* — управление заблокированными датами\n` +
       `• ⚔️ *Матчи и Игры* — результаты, W/L статистика\n` +
-      `• 👥 *Составы* — Main & Junior ростеры и капитаны\n` +
+      `• 👥 *Состав* — Main ростер и капитан\n` +
       `• 💾 *Экспорт БД* — мгновенная выгрузка базы данных в чат`;
 
     if (sendReplyKeyboard) {
@@ -505,10 +535,9 @@ class TelegramBotService {
   }
 
   // Render Date Picker
-  async renderDatePicker(chatId, messageId = null, team = 'all') {
+  async renderDatePicker(chatId, messageId = null, team = 'main') {
     const text = `🔒 *Закрытие дат для пракков:*\n\n` +
-      `Нажмите на нужную дату, чтобы *закрыть* 🔴 (или *открыть* 🟢) её в календаре для состава:\n` +
-      `👉 *${team === 'all' ? 'Все составы' : team === 'main' ? 'Main Roster' : 'Junior Roster'}*\n\n` +
+      `Нажмите на нужную дату, чтобы *закрыть* 🔴 (или *открыть* 🟢) её в календаре сайта для состава Rekinder Main.\n\n` +
       `🟢 = день открыт для записи\n🔴 = день закрыт (занято)`;
 
     if (messageId) {
@@ -534,7 +563,7 @@ class TelegramBotService {
     if (blockedDates.length === 0) {
       const emptyText = '🟢 *Нет закрытых дат.* Все дни открыты для бронирования пракков.';
       const keyboard = [
-        [{ text: '🔒 Закрыть день', callback_data: 'menu:block_select_team:all' }],
+        [{ text: '🔒 Закрыть день', callback_data: 'menu:block' }],
         [{ text: '🔙 Назад в меню', callback_data: 'menu:main' }]
       ];
       if (messageId) {
@@ -560,15 +589,15 @@ class TelegramBotService {
     const keyboard = [];
 
     blockedDates.forEach((b, idx) => {
-      const tName = b.team === 'all' ? 'Все составы' : (b.team === 'main' ? 'Main' : 'Junior');
-      resp += `${idx + 1}. 📅 *${b.date}* (${tName})\n`;
+      const tName = 'Rekinder Main';
+      resp += `${idx + 1}. 📅 *${b.date}*\n`;
       keyboard.push([
-        { text: `🔓 Открыть ${b.date} (${tName})`, callback_data: `unblock:${b.date}:${b.team}` }
+        { text: `🔓 Открыть ${b.date}`, callback_data: `unblock:${b.date}:${b.team || 'main'}` }
       ]);
     });
 
     keyboard.push([
-      { text: '➕ Закрыть еще день', callback_data: 'menu:block_select_team:all' },
+      { text: '➕ Закрыть еще день', callback_data: 'menu:block' },
       { text: '🔙 Назад в меню', callback_data: 'menu:main' }
     ]);
 
@@ -642,10 +671,9 @@ class TelegramBotService {
 
   // Render Players / Rosters
   async renderPlayers(chatId, messageId = null) {
-    const mainPlayers = players.filter(p => p.team === 'main');
-    const juniorPlayers = players.filter(p => p.team === 'junior');
+    const mainPlayers = players.filter(p => p.team === 'main' || !p.team);
 
-    let resp = `👥 *Составы Rekinder eSports*\n\n`;
+    let resp = `👥 *Состав Rekinder eSports*\n\n`;
     resp += `🛡️ *Main Roster (${mainPlayers.length} игроков):*\n`;
     if (mainPlayers.length === 0) {
       resp += `_Игроки не добавлены_\n`;
@@ -655,21 +683,14 @@ class TelegramBotService {
       });
     }
 
-    resp += `\n⚡ *Junior Roster (${juniorPlayers.length} игроков):*\n`;
-    if (juniorPlayers.length === 0) {
-      resp += `_Игроки не добавлены_\n`;
-    } else {
-      juniorPlayers.forEach(p => {
-        resp += `• ${p.cap ? '👑 ' : ''}*${p.nick}* — ${p.role}\n`;
-      });
-    }
-
-    resp += `\nВыберите состав для настройки игроков:`;
+    resp += `\nВыберите действие для управления игроками:`;
 
     const keyboard = [
       [
-        { text: '🛡️ Настроить Main Roster', callback_data: 'players:list:main' },
-        { text: '⚡ Настроить Junior Roster', callback_data: 'players:list:junior' }
+        { text: '🛡️ Управление игроками Main Roster', callback_data: 'players:list:main' }
+      ],
+      [
+        { text: '🔄 Сбросить состав на 5 UNKNOWN', callback_data: 'players:reset_defaults' }
       ],
       [
         { text: '🔙 Назад в главное меню', callback_data: 'menu:main' }
@@ -714,7 +735,7 @@ class TelegramBotService {
     resp += `• ⏳ В ожидании: *${pendCount}*\n`;
     resp += `• ❌ Отклонено: *${declCount}*\n\n`;
     resp += `🔒 *Закрытых дат:* *${blockedDates.length}*\n`;
-    resp += `👥 *Игроков в составах:* *${players.length}* (Main: ${players.filter(p=>p.team==='main').length}, Junior: ${players.filter(p=>p.team==='junior').length})\n`;
+    resp += `👥 *Игроков в составе:* *${mainPlayers.length}*\n`;
     resp += `⚔️ *Матчи:* *${totalMatches}* игр (Винрейт: *${winrate}%*)\n`;
 
     const keyboard = [
@@ -791,16 +812,9 @@ class TelegramBotService {
   }
 
   // Generate date buttons for the next 14 days
-  getDatePickerKeyboard(team = 'all', page = 0) {
+  getDatePickerKeyboard(team = 'main', page = 0) {
     const keyboard = [];
     const today = new Date();
-    
-    // Team selector row
-    keyboard.push([
-      { text: team === 'all' ? '🔘 Все составы' : '⚪ Все составы', callback_data: `pickteam:all` },
-      { text: team === 'main' ? '🔘 Main' : '⚪ Main', callback_data: `pickteam:main` },
-      { text: team === 'junior' ? '🔘 Junior' : '⚪ Junior', callback_data: `pickteam:junior` }
-    ]);
 
     const daysToShow = 14;
     const dateButtons = [];
@@ -810,13 +824,13 @@ class TelegramBotService {
       d.setDate(today.getDate() + i);
       const isoDate = d.toISOString().split('T')[0];
       
-      const isAlreadyBlocked = blockedDates.some(b => b.date === isoDate && (b.team === team || b.team === 'all' || team === 'all'));
+      const isAlreadyBlocked = blockedDates.some(b => b.date === isoDate);
       const dayName = d.toLocaleDateString('ru-RU', { weekday: 'short' });
       const label = `${isAlreadyBlocked ? '🔴' : '🟢'} ${isoDate.slice(5)} (${dayName})`;
 
       dateButtons.push({
         text: label,
-        callback_data: isAlreadyBlocked ? `unblock:${isoDate}:${team}` : `doblock:${isoDate}:${team}`
+        callback_data: isAlreadyBlocked ? `unblock:${isoDate}:main` : `doblock:${isoDate}:main`
       });
     }
 
@@ -884,11 +898,11 @@ class TelegramBotService {
 
       // Team selection in Date Picker
       if (data.startsWith('pickteam:')) {
-        const team = data.split(':')[1];
+        const team = 'main';
         await this.sendApiRequest('editMessageText', {
           chat_id: chatId,
           message_id: messageId,
-          text: `🔒 *Закрытие дат для пракков:*\n\nНажмите на нужную дату, чтобы *закрыть* 🔴 (или *открыть* 🟢) её в календаре для состава:\n👉 *${team === 'all' ? 'Все составы' : team === 'main' ? 'Main Roster' : 'Junior Roster'}*`,
+          text: `🔒 *Закрытие дат для пракков:*\n\nНажмите на нужную дату, чтобы *закрыть* 🔴 (или *открыть* 🟢) её в календаре для состава Rekinder Main:`,
           parse_mode: 'Markdown',
           reply_markup: {
             inline_keyboard: this.getDatePickerKeyboard(team)
@@ -1151,11 +1165,27 @@ class TelegramBotService {
         return;
       }
 
+      // Reset Players to Defaults
+      if (data === 'players:reset_defaults') {
+        players.length = 0;
+        players.push(...DEFAULT_ROSTER_PLAYERS);
+        savePlayers();
+
+        await this.sendApiRequest('answerCallbackQuery', {
+          callback_query_id: cb.id,
+          text: '✅ Все составы сброшены на стандартных игроков Rekinder eSports!',
+          show_alert: true
+        });
+
+        await this.renderPlayers(chatId, messageId);
+        return;
+      }
+
       // List Players for Team
       if (data.startsWith('players:list:')) {
-        const team = data.split(':')[2];
-        const teamName = team === 'main' ? 'Main Roster' : 'Junior Roster';
-        const teamPlayers = players.filter(p => p.team === team);
+        const team = 'main';
+        const teamName = 'Main Roster';
+        const teamPlayers = players.filter(p => p.team === 'main' || !p.team);
 
         let resp = `👥 *Управление игроками: ${teamName}*\n\nНажмите на игрока для изменения его роли или капитанства:`;
         const keyboard = [];
@@ -1167,7 +1197,11 @@ class TelegramBotService {
         });
 
         keyboard.push([
-          { text: '🔙 К выбору состава', callback_data: 'menu:players' },
+          { text: '➕ Добавить игрока командой', callback_data: `player:add_hint:main` }
+        ]);
+
+        keyboard.push([
+          { text: '🔙 К составу', callback_data: 'menu:players' },
           { text: '🏠 Главное меню', callback_data: 'menu:main' }
         ]);
 
@@ -1175,6 +1209,34 @@ class TelegramBotService {
           chat_id: chatId,
           message_id: messageId,
           text: resp,
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: keyboard }
+        });
+        await this.sendApiRequest('answerCallbackQuery', { callback_query_id: cb.id });
+        return;
+      }
+
+      // Hint how to add player via text command
+      if (data.startsWith('player:add_hint:')) {
+        const team = 'main';
+        const teamName = 'Main';
+        const helpText = `➕ *Как добавить или обновить игрока:*\n\n` +
+          `Отправьте текстовое сообщение в чат бота в формате:\n\n` +
+          `\`/addplayer НИК РОЛЬ [cap]\`\n\n` +
+          `*Примеры:*\n` +
+          `• \`/addplayer SIMPLE Sniper main\`\n` +
+          `• \`/addplayer B1T Rifler main\`\n` +
+          `• \`/addplayer M0NESY AWP main cap\` _(сразу назначить капитаном)_\n\n` +
+          `*Доступные роли:* \`Sniper\`, \`In-Game Leader\`, \`OpenFragger\`, \`Entry\`, \`Lurker\`, \`Support\`, \`Rifler\``;
+
+        const keyboard = [
+          [{ text: `🔙 Назад к составу`, callback_data: `players:list:main` }]
+        ];
+
+        await this.sendApiRequest('editMessageText', {
+          chat_id: chatId,
+          message_id: messageId,
+          text: helpText,
           parse_mode: 'Markdown',
           reply_markup: { inline_keyboard: keyboard }
         });
@@ -1207,7 +1269,8 @@ class TelegramBotService {
             { text: player.cap ? '❌ Снять статус капитана' : '👑 Назначить капитаном', callback_data: `player:toggle_cap:${player.nick}` }
           ],
           [
-            { text: '🔄 Сменить роль', callback_data: `player:cycle_role:${player.nick}` }
+            { text: '🔄 Сменить роль', callback_data: `player:cycle_role:${player.nick}` },
+            { text: '🗑️ Удалить игрока', callback_data: `player:delete:${player.nick}` }
           ],
           [
             { text: `🔙 К составу ${player.team.toUpperCase()}`, callback_data: `players:list:${player.team}` }
@@ -1260,7 +1323,8 @@ class TelegramBotService {
               { text: player.cap ? '❌ Снять статус капитана' : '👑 Назначить капитаном', callback_data: `player:toggle_cap:${player.nick}` }
             ],
             [
-              { text: '🔄 Сменить роль', callback_data: `player:cycle_role:${player.nick}` }
+              { text: '🔄 Сменить роль', callback_data: `player:cycle_role:${player.nick}` },
+              { text: '🗑️ Удалить игрока', callback_data: `player:delete:${player.nick}` }
             ],
             [
               { text: `🔙 К составу ${player.team.toUpperCase()}`, callback_data: `players:list:${player.team}` }
@@ -1308,12 +1372,62 @@ class TelegramBotService {
               { text: player.cap ? '❌ Снять статус капитана' : '👑 Назначить капитаном', callback_data: `player:toggle_cap:${player.nick}` }
             ],
             [
-              { text: '🔄 Сменить роль', callback_data: `player:cycle_role:${player.nick}` }
+              { text: '🔄 Сменить роль', callback_data: `player:cycle_role:${player.nick}` },
+              { text: '🗑️ Удалить игрока', callback_data: `player:delete:${player.nick}` }
             ],
             [
               { text: `🔙 К составу ${player.team.toUpperCase()}`, callback_data: `players:list:${player.team}` }
             ]
           ];
+
+          await this.sendApiRequest('editMessageText', {
+            chat_id: chatId,
+            message_id: messageId,
+            text: resp,
+            parse_mode: 'Markdown',
+            reply_markup: { inline_keyboard: keyboard }
+          });
+          return;
+        }
+      }
+
+      // Delete Player
+      if (data.startsWith('player:delete:')) {
+        const nick = data.split(':')[2];
+        const idx = players.findIndex(p => p.nick.toUpperCase() === nick.toUpperCase());
+
+        if (idx !== -1) {
+          const removed = players.splice(idx, 1)[0];
+          savePlayers();
+
+          await this.sendApiRequest('answerCallbackQuery', {
+            callback_query_id: cb.id,
+            text: `🗑️ Игрок ${removed.nick} удален!`,
+            show_alert: true
+          });
+
+          // Return to team players list
+          const team = 'main';
+          const teamName = 'Main Roster';
+          const teamPlayers = players.filter(p => p.team === 'main' || !p.team);
+
+          let resp = `👥 *Управление игроками: ${teamName}*\n\nНажмите на игрока для изменения его роли или капитанства:`;
+          const keyboard = [];
+
+          teamPlayers.forEach(p => {
+            keyboard.push([
+              { text: `${p.cap ? '👑 ' : ''}${p.nick} (${p.role})`, callback_data: `player:view:${p.nick}` }
+            ]);
+          });
+
+          keyboard.push([
+            { text: '➕ Добавить игрока командой', callback_data: `player:add_hint:main` }
+          ]);
+
+          keyboard.push([
+            { text: '🔙 К составу', callback_data: 'menu:players' },
+            { text: '🏠 Главное меню', callback_data: 'menu:main' }
+          ]);
 
           await this.sendApiRequest('editMessageText', {
             chat_id: chatId,
@@ -1532,6 +1646,173 @@ class TelegramBotService {
 
       if (lower.includes('состав') || lower.includes('игрок') || text === '👥 Составы и Игроки' || lower === '/players') {
         await this.renderPlayers(chatId, null);
+        return;
+      }
+
+      // /addplayer command
+      if (lower.startsWith('/addplayer') || lower.startsWith('/player_add')) {
+        const parts = text.split(/\s+/);
+        // Format: /addplayer <nick> <role> <team> [cap]
+        // or /addplayer <nick> <team>
+        if (parts.length < 2) {
+          const helpMsg = `ℹ️ *Формат команды добавления игрока:*\n\n` +
+            `\`/addplayer НИК РОЛЬ СОСТАВ [cap]\`\n\n` +
+            `*Параметры:*\n` +
+            `• *НИК:* никнейм игрока (например, \`AIMIR666\`)\n` +
+            `• *РОЛЬ:* \`Sniper\`, \`In-Game Leader\`, \`OpenFragger\`, \`Entry\`, \`Lurker\`, \`Support\`, \`Rifler\`\n` +
+            `• *[cap]:* напишите \`cap\` или \`1\`, если он капитан\n\n` +
+            `*Примеры:*\n` +
+            `• \`/addplayer SIMPLE Sniper main cap\`\n` +
+            `• \`/addplayer B1T Rifler\`\n` +
+            `• \`/addplayer M0NESY Sniper\``;
+
+          await this.sendApiRequest('sendMessage', {
+            chat_id: chatId,
+            text: helpMsg,
+            parse_mode: 'Markdown'
+          });
+          return;
+        }
+
+        const nick = parts[1].trim();
+        let role = 'Rifler';
+        let team = 'main';
+        let isCap = 0;
+
+        // Parse remaining arguments intelligently
+        for (let i = 2; i < parts.length; i++) {
+          const arg = parts[i].trim().toLowerCase();
+          if (arg === 'main' || arg === 'основа') {
+            team = 'main';
+          } else if (arg === 'cap' || arg === 'капитан' || arg === '1') {
+            isCap = 1;
+          } else if (['sniper', 'awp', 'снайпер'].includes(arg)) {
+            role = 'Sniper';
+          } else if (['igl', 'in-game leader', 'капитан-лидер', 'лидер'].includes(arg)) {
+            role = 'In-Game Leader';
+          } else if (['entry', 'openfragger', 'энтри'].includes(arg)) {
+            role = 'OpenFragger';
+          } else if (['lurker', 'люркер'].includes(arg)) {
+            role = 'Lurker';
+          } else if (['support', 'саппорт'].includes(arg)) {
+            role = 'Support';
+          } else if (['rifler', 'рифлер'].includes(arg)) {
+            role = 'Rifler';
+          } else if (i === 2) {
+            // Keep verbatim role if specified as 2nd arg
+            role = parts[i].trim();
+          }
+        }
+
+        // Check if player exists
+        const existingIdx = players.findIndex(p => p.nick.toUpperCase() === nick.toUpperCase());
+        if (isCap) {
+          // Remove cap from other players in this team
+          players.forEach(p => {
+            if (p.team === team) p.cap = 0;
+          });
+        }
+
+        if (existingIdx !== -1) {
+          players[existingIdx] = {
+            ...players[existingIdx],
+            nick: nick,
+            role: role,
+            team: team,
+            cap: isCap
+          };
+        } else {
+          players.push({
+            nick: nick,
+            role: role,
+            team: team,
+            cap: isCap,
+            photo: 'player_default.png'
+          });
+        }
+
+        savePlayers();
+
+        await this.sendApiRequest('sendMessage', {
+          chat_id: chatId,
+          text: `✅ *Игрок успешно сохранен!*\n\n` +
+            `👤 *Ник:* \`${nick}\`\n` +
+            `🎯 *Роль:* ${role}\n` +
+            `🛡️ *Состав:* ${team.toUpperCase()}\n` +
+            `👑 *Капитан:* ${isCap ? 'Да' : 'Нет'}\n\n` +
+            `_Изменения сразу применены на сайте и в базе!_`,
+          parse_mode: 'Markdown'
+        });
+
+        await this.renderPlayers(chatId, null);
+        return;
+      }
+
+      // /delplayer command
+      if (lower.startsWith('/delplayer') || lower.startsWith('/removeplayer')) {
+        const parts = text.split(/\s+/);
+        if (parts.length < 2) {
+          await this.sendApiRequest('sendMessage', {
+            chat_id: chatId,
+            text: `ℹ️ Использование: \`/delplayer НИК\`\nНапример: \`/delplayer AIMIR666\``,
+            parse_mode: 'Markdown'
+          });
+          return;
+        }
+
+        const nick = parts[1].trim();
+        const idx = players.findIndex(p => p.nick.toUpperCase() === nick.toUpperCase());
+        if (idx !== -1) {
+          const removed = players.splice(idx, 1)[0];
+          savePlayers();
+          await this.sendApiRequest('sendMessage', {
+            chat_id: chatId,
+            text: `🗑️ Игрок *${removed.nick}* успешно удален из состава *${removed.team.toUpperCase()}*!`,
+            parse_mode: 'Markdown'
+          });
+          await this.renderPlayers(chatId, null);
+        } else {
+          await this.sendApiRequest('sendMessage', {
+            chat_id: chatId,
+            text: `⚠️ Игрок с ником *${nick}* не найден в базе.`,
+            parse_mode: 'Markdown'
+          });
+        }
+        return;
+      }
+
+      // /addmatch command
+      if (lower.startsWith('/addmatch')) {
+        const parts = text.split(/\s+/);
+        // /addmatch <opponent> <score> [WIN/LOSS]
+        if (parts.length < 3) {
+          await this.sendApiRequest('sendMessage', {
+            chat_id: chatId,
+            text: `ℹ️ *Формат добавления матча:*\n\n\`/addmatch Соперник Счет [WIN/LOSS]\`\n\n*Пример:*\n\`/addmatch "NAVI Junior" 13:9 WIN\``,
+            parse_mode: 'Markdown'
+          });
+          return;
+        }
+
+        const opp = parts[1].replace(/["']/g, '');
+        const score = parts[2];
+        const status = (parts[3] || 'WIN').toUpperCase();
+        const today = new Date().toISOString().split('T')[0];
+
+        matches.unshift({
+          opponent: opp,
+          score: score,
+          status: status.includes('WIN') || status.includes('ПОБЕДА') ? 'WIN' : 'LOSS',
+          opp_logo: 'trophy.png',
+          date: today
+        });
+        saveMatches();
+
+        await this.sendApiRequest('sendMessage', {
+          chat_id: chatId,
+          text: `⚔️ *Матч успешно добавлен в историю!*\n\n• Противник: *${opp}*\n• Счет: *${score}* (${status})\n• Дата: ${today}`,
+          parse_mode: 'Markdown'
+        });
         return;
       }
 

@@ -86,6 +86,72 @@ nav { display: flex; justify-content: space-between; align-items: center; }
 .btn-secondary { border: 1px solid var(--primary); color: var(--primary); background: transparent; }
 .btn-secondary:hover { background: var(--primary); color: var(--bg-dark); transform: translateY(-5px) scale(1.05); }
 
+/* --- BOOKING BUTTON --- */
+.btn-booking {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 50px;
+    padding: 0 28px;
+    background: #09090b;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 2px;
+    color: #ffffff;
+    font-family: 'Orbitron', 'Montserrat', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.7), inset 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+.btn-booking:hover {
+    background: #ffffff;
+    color: #000000;
+    border-color: #ffffff;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
+    transform: translateY(-2px);
+}
+
+.btn-booking i {
+    font-size: 1.05rem;
+}
+
+.scrim-team-single {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 3px;
+    padding: 14px 20px;
+    margin-bottom: 24px;
+}
+
+.scrim-team-single h4 {
+    margin: 0;
+    font-size: 1.15rem;
+    text-transform: uppercase;
+    font-family: 'Orbitron', sans-serif;
+    color: #ffffff;
+}
+
+.schedule-team-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ffffff;
+    font-family: 'Orbitron', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
 /* --- BOOKING EXPANDING SPLIT BUTTON --- */
 .booking-split-container {
     display: inline-flex;
@@ -386,7 +452,7 @@ nav { display: flex; justify-content: space-between; align-items: center; }
 
     /* Hero */
     .hero-btns { flex-direction: column; gap: 15px; align-items: center; width: 100%; }
-    .btn-primary, .btn-secondary, .booking-split-container { width: 85%; max-width: 360px; margin: 0; min-width: unset; }
+    .btn-primary, .btn-secondary, .btn-booking, .booking-split-container { width: 85%; max-width: 360px; margin: 0; min-width: unset; }
     .booking-split-container.active, .booking-split-container:hover { width: 85%; max-width: 360px; min-width: unset; }
     .booking-sub-btn { font-size: 0.7rem; padding: 0 8px; }
     .title { font-size: 2.8rem; }
@@ -395,8 +461,7 @@ nav { display: flex; justify-content: space-between; align-items: center; }
     .roster-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .player-card { width: 100% !important; }
 
-    #main-roster-grid .player-card:nth-child(3),
-    #junior-roster-grid .player-card:nth-child(5) {
+    #main-roster-grid .player-card:nth-child(3) {
         grid-column: 1 / span 2;
         width: 160px !important; 
         margin: 0 auto;

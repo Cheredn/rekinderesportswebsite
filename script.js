@@ -93,11 +93,10 @@ async function updateRoster() {
         const response = await fetch('/api/players');
         const players = await response.json();
         const mainGrid = document.getElementById('main-roster-grid');
-        const juniorGrid = document.getElementById('junior-roster-grid');
-        mainGrid.innerHTML = ''; juniorGrid.innerHTML = '';
+        if (!mainGrid) return;
+        mainGrid.innerHTML = '';
 
-        const mainPlayers = players.filter(p => p.team === 'main');
-        const juniorPlayers = players.filter(p => p.team === 'junior');
+        const mainPlayers = players.filter(p => p.team === 'main' || !p.team);
 
         if (mainPlayers.length === 0) {
             mainGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #6b7280; padding: 24px 12px; font-size: 0.95rem; border: 1px dashed #27272a; border-radius: 4px;">Состав формируется. Игроки могут быть добавлены через Telegram бота.</div>';
@@ -106,7 +105,7 @@ async function updateRoster() {
                 const card = document.createElement('div');
                 card.className = 'player-card reveal active';
                 card.innerHTML = `
-                    <div class="player-img"><img src="${p.photo}" onerror="this.src='logo.png'"></div>
+                    <div class="player-img"><img src="${p.photo || 'logo.png'}" onerror="this.src='logo.png'"></div>
                     <div class="player-info">
                         ${p.cap ? '<div class="player-tag">CAPTAIN</div>' : ''}
                         <h3>${p.nick}</h3>
@@ -115,24 +114,7 @@ async function updateRoster() {
                 mainGrid.appendChild(card);
             });
         }
-
-        if (juniorPlayers.length === 0) {
-            juniorGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #6b7280; padding: 24px 12px; font-size: 0.95rem; border: 1px dashed #27272a; border-radius: 4px;">Состав формируется. Игроки могут быть добавлены через Telegram бота.</div>';
-        } else {
-            juniorPlayers.forEach(p => {
-                const card = document.createElement('div');
-                card.className = 'player-card reveal active';
-                card.innerHTML = `
-                    <div class="player-img"><img src="${p.photo}" onerror="this.src='logo.png'"></div>
-                    <div class="player-info">
-                        ${p.cap ? '<div class="player-tag">CAPTAIN</div>' : ''}
-                        <h3>${p.nick}</h3>
-                        <p>${p.role}</p>
-                    </div>`;
-                juniorGrid.appendChild(card);
-            });
-        }
-    } catch (e) { console.log("Roster error"); }
+    } catch (e) { console.log("Roster error", e); }
 }
 
 // API: Matches
@@ -198,9 +180,7 @@ const scrimModal = document.getElementById('scrim-modal');
 const scrimModalClose = document.getElementById('scrim-modal-close');
 const scrimModalOverlay = document.getElementById('scrim-modal-overlay');
 const navBookingBtn = document.getElementById('nav-booking-btn');
-const btnBookingMain = document.getElementById('btn-booking-main');
-const btnBookingJunior = document.getElementById('btn-booking-junior');
-const bookingContainer = document.getElementById('booking-split-container');
+const btnHeroBooking = document.getElementById('btn-hero-booking');
 
 // State
 let selectedTeam = 'main';
@@ -214,8 +194,7 @@ let schedulePollTimer = null;
 
 // Open / Close Modal
 function openBookingModal(team = 'main') {
-    selectedTeam = team;
-    updateTeamSelection(team);
+    selectedTeam = 'main';
     if (scrimModal) {
         scrimModal.classList.add('open');
         scrimModal.setAttribute('aria-hidden', 'false');
@@ -255,64 +234,12 @@ if (navBookingBtn) {
     });
 }
 
-if (btnBookingMain) {
-    btnBookingMain.addEventListener('click', (e) => {
+if (btnHeroBooking) {
+    btnHeroBooking.addEventListener('click', (e) => {
         e.preventDefault();
-        e.stopPropagation();
         openBookingModal('main');
     });
 }
-
-if (btnBookingJunior) {
-    btnBookingJunior.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openBookingModal('junior');
-    });
-}
-
-// Booking split button touch handling for mobile devices
-if (bookingContainer) {
-    bookingContainer.addEventListener('click', (e) => {
-        if (e.target.closest('.booking-sub-btn')) return;
-        if (window.innerWidth <= 768 || window.matchMedia('(hover: none)').matches) {
-            bookingContainer.classList.toggle('active');
-        }
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!bookingContainer.contains(e.target)) {
-            bookingContainer.classList.remove('active');
-        }
-    });
-}
-
-// Team Selection in Modal
-function updateTeamSelection(team) {
-    selectedTeam = team;
-    const cardMain = document.getElementById('team-card-main');
-    const cardJunior = document.getElementById('team-card-junior');
-    const radioMain = document.querySelector('input[name="target_team"][value="main"]');
-    const radioJunior = document.querySelector('input[name="target_team"][value="junior"]');
-
-    if (team === 'junior') {
-        if (cardMain) cardMain.classList.remove('active');
-        if (cardJunior) cardJunior.classList.add('active');
-        if (radioJunior) radioJunior.checked = true;
-    } else {
-        if (cardJunior) cardJunior.classList.remove('active');
-        if (cardMain) cardMain.classList.add('active');
-        if (radioMain) radioMain.checked = true;
-    }
-    renderCalendar();
-}
-
-document.querySelectorAll('.scrim-team-card').forEach(card => {
-    card.addEventListener('click', function () {
-        const team = this.getAttribute('data-team');
-        updateTeamSelection(team);
-    });
-});
 
 // Modal Tabs
 const tabBtnForm = document.getElementById('tab-btn-form');
@@ -652,7 +579,7 @@ if (scrimForm) {
 
             if (res.ok && data.success) {
                 const b = data.booking;
-                const teamTitle = b.team === 'junior' ? 'Rekinder eSports Junior' : 'Rekinder eSports (Main)';
+                const teamTitle = 'Rekinder eSports';
 
                 if (bookingSummaryCard) {
                     const oppLogoHtml = b.teamLogo ? `<img src="${b.teamLogo}" alt="${b.opponentTeam}" style="width:28px;height:28px;border-radius:2px;object-fit:cover;margin-right:6px;vertical-align:middle;">` : '';
@@ -789,7 +716,7 @@ function renderScheduleList() {
         const item = document.createElement('div');
         item.className = 'schedule-item';
 
-        const teamName = b.team === 'junior' ? 'Rekinder Junior' : 'Rekinder eSports';
+        const teamName = 'Rekinder eSports';
         const statusClass = b.status === 'confirmed' ? 'confirmed' : (b.status === 'declined' ? 'declined' : 'pending');
         const statusText = b.status === 'confirmed' ? 'Подтвержден' : (b.status === 'declined' ? 'Отклонен' : 'В ожидании');
 

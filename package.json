@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
-    "build": "echo 'Build complete'"
+    "build": "echo 'Build complete'",
+    "lint": "node --check server.js botService.js emailService.js"
   },
   "dependencies": {
     "cors": "^2.8.6",
